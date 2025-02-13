@@ -90,7 +90,14 @@ MatchingNameSpaces SHMSensorAggregator::parseDevicePath(
                 maxMatchCount = currentMatchCount;
                 if (maxMatchCount == 1)
                 {
-                    deviceName = string(devicePathObj.filename());
+                    if (devicePath.find("xyz/openbmc_project/state") == 0)
+                    {
+                        subDeviceName = string(devicePathObj.filename());
+                    }
+                    else
+                    {
+                        deviceName = string(devicePathObj.filename());
+                    }
                 }
                 else
                 {
