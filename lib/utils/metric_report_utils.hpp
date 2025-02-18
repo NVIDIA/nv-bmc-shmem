@@ -606,7 +606,7 @@ inline string generateURI(const string& deviceType, const string& deviceName,
             std::regex pageRetirementRegex("PageRetirementCount_\\d+$");
             if (std::regex_search(subDeviceName, pageRetirementRegex))
             {
-                metricURI = "/redfishh/v1/Systems/" PLATFORMSYSTEMID;
+                metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
                 metricURI += "/Processors/";
                 metricURI += deviceName;
                 metricURI += "/ProcessorMetrics";
