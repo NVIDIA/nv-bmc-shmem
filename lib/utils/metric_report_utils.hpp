@@ -351,6 +351,27 @@ static MetricNameMap healthInterfaceMap = {{"Health", "#/Status/Health"}};
 static MetricNameMap healthRollupInterfaceMap = {
     {"HealthRollup", "#/Status/HealthRollup"}};
 
+/* Map for PowerSmoothing to redfish string based on metric name*/
+static MetricNameMap powerSmoothingCurrentPwrProfileInterfaceMap = {
+    {"TMPFloorPercent", "/TMPFloorPercent"},
+    {"RampDownHysteresis", "/RampDownHysteresisSeconds"},
+    {"RampDownRate", "/RampDownWattsPerSecond"},
+    {"RampUpRate", "/RampUpWattsPerSecond"}};
+
+/* Map for PowerSmoothing.CurrentPowerProfile to redfish string based on metric
+ * name*/
+static MetricNameMap powerSmoothingInterfaceMap = {
+    {"PowerSmoothingEnabled", "/Enabled"},
+    {"ImmediateRampDownEnabled", "/ImmediateRampDown"},
+    {"LifeTimeRemaining", "/RemainingLifetimeCircuitryPercent"}};
+
+/* Map for DOEReconfigPermissions/InbandReconfigPermissions to redfish string
+ * based on metric name*/
+static MetricNameMap reConfigPermission = {
+    {"AllowFLRPersistentConfig", "/AllowFLRPersistentConfig"},
+    {"AllowOneShotConfig", "/AllowOneShotConfig"},
+    {"AllowPersistentConfig", "/AllowPersistentConfig"}};
+
 /* This map is for PDI name to metric name. Key is pdi name and value is
  * corresponding metric name map */
 static PDINameMap pdiNameMap = {
@@ -390,7 +411,11 @@ static PDINameMap pdiNameMap = {
     {"xyz.openbmc_project.Inventory.Decorator.PCIeRefClock", pcieRefClockMap},
     {"xyz.openbmc_project.State.Decorator.Health", healthInterfaceMap},
     {"xyz.openbmc_project.State.Decorator.HealthRollup",
-     healthRollupInterfaceMap}};
+     healthRollupInterfaceMap},
+    {"com.nvidia.PowerSmoothing.PowerSmoothing", powerSmoothingInterfaceMap},
+    {"com.nvidia.PowerSmoothing.CurrentPowerProfile",
+     powerSmoothingCurrentPwrProfileInterfaceMap},
+    {"com.nvidia.InbandReconfigSettings", reConfigPermission}};
 
 /**
  * @brief This method will form suffix for redfish URI for device/sub device
@@ -731,6 +756,54 @@ inline string generateURI(const string& deviceType, const string& deviceName,
                 metricURI += "#";
             }
         }
+        else if (ifaceName == "com.nvidia.PowerSmoothing.CurrentPowerProfile" ||
+                 ifaceName == "com.nvidia.PowerSmoothing.PowerSmoothing")
+        {
+            metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+            metricURI += "/Processors/";
+            metricURI += deviceName;
+            metricURI += "/Oem/Nvidia/PowerSmoothing";
+            metricURI += "#";
+        }
+        else if (ifaceName == "com.nvidia.InbandReconfigSettings")
+        {
+            if (metricName == "AllowFLRPersistentConfig" ||
+                metricName == "AllowOneShotConfig" ||
+                metricName == "AllowPersistentConfig")
+            {
+                if (devicePath.find("InbandReconfigPermissions") !=
+                    std::string::npos)
+                {
+                    sdbusplus::message::object_path deviceObjectPath(
+                        devicePath);
+                    const string childDeviceName = deviceObjectPath.filename();
+                    metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+                    metricURI += "/Processors/";
+                    metricURI += string(deviceObjectPath.parent_path()
+                                            .parent_path()
+                                            .filename());
+                    metricURI += "#";
+                    metricURI += "/Oem/Nvidia/InbandReconfigPermissions/";
+                    metricURI += childDeviceName;
+                }
+                else if (devicePath.find("DOEReconfigPermissions") !=
+                         std::string::npos)
+                {
+                    sdbusplus::message::object_path deviceObjectPath(
+                        devicePath);
+                    const string childDeviceName = deviceObjectPath.filename();
+                    metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+                    metricURI += "/Processors/";
+                    metricURI += string(deviceObjectPath.parent_path()
+                                            .parent_path()
+                                            .filename());
+                    metricURI += "#";
+                    metricURI += "/Oem/Nvidia/DOEReconfigPermissions/";
+                    metricURI += childDeviceName;
+                }
+            }
+        }
+
         propSuffix = getPropertySuffix(ifaceName, metricName);
     }
     else if (deviceType == "ProcessorGPMMetrics")
