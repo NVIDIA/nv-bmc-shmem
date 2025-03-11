@@ -133,6 +133,85 @@ static unordered_map<string, string> powerStateTypeMap = {
      "Updating"},
 };
 
+/* Map for LinkDownReasonCode pdi to redfish string */
+static unordered_map<string, string> linkDownReasonCodeMap = {
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.NoLinkDown",
+     "NoLinkDown"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.Unknown",
+     "Unknown"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.HighBitErrorRate",
+     "HighBitErrorRate"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.BlockLockLost",
+     "BlockLockLost"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.AlignmentLost",
+     "AlignmentLost"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FECSyncLost",
+     "FECSyncLost"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PllLockLost",
+     "PllLockLost"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FIFOOverflow",
+     "FIFOOverflow"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FalseSkipDetected",
+     "FalseSkipDetected"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.MinorErrorThresholdExceeded",
+     "MinorErrorThresholdExceeded"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PhyRetransmitTimeout",
+     "PhyRetransmitTimeout"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.HeartbeatErrors",
+     "HeartbeatErrors"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.CreditMonitorWatchdogTimeout",
+     "CreditMonitorWatchdogTimeout"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.LinkLayerIntegrityThresholdExceeded",
+     "LinkLayerIntegrityThresholdExceeded"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.LinkLayerBufferOverrun",
+     "LinkLayerBufferOverrun"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.OOBCommandLinkHealthy",
+     "OOBCommandLinkHealthy"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.OOBCommandLinkHighBER",
+     "OOBCommandLinkHighBER"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.InbandCommandLinkHealthy",
+     "InbandCommandLinkHealthy"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.InbandCommandLinkHighBER",
+     "InbandCommandLinkHighBER"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.VerificationGatewayDown",
+     "VerificationGatewayDown"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.RemoteFaultReceived",
+     "RemoteFaultReceived"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.TrainingSequenceReceived",
+     "TrainingSequenceReceived"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.ManagementCommandDown",
+     "ManagementCommandDown"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.CableDisconnected",
+     "CableDisconnected"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.CableAccessFault",
+     "CableAccessFault"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.ThermalShutdown",
+     "ThermalShutdown"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.CurrentIssue",
+     "CurrentIssue"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PowerBudgetExceeded",
+     "PowerBudgetExceeded"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FastRawBERRecovery",
+     "FastRawBERRecovery"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FastEffectiveBERRecovery",
+     "FastEffectiveBERRecovery"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FastSymbolBERRecovery",
+     "FastSymbolBERRecovery"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.FastCreditWatchdogRecovery",
+     "FastCreditWatchdogRecovery"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerSleep",
+     "PeerSleep"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerDisabled",
+     "PeerDisabled"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerDisableLocked",
+     "PeerDisableLocked"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerThermalEvent",
+     "PeerThermalEvent"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerForcedEvent",
+     "PeerForcedEvent"},
+    {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerResetEvent",
+     "PeerResetEvent"}};
+
 /* Map for portInfo interface pdi to redfish string based on metric name */
 static MetricNameMap portInfoInterfaceMap = {
     {"CurrentSpeed", "#/CurrentSpeedGbps"}, {"MaxSpeed", "#/MaxSpeedGbps"}};
@@ -156,7 +235,7 @@ static MetricNameMap ibPortInterfaceMap = {
     {"VL15TXPkts", "/Metrics#/Oem/Nvidia/VL15TXPackets"},
     {"VL15TXData", "/Metrics#/Oem/Nvidia/VL15TXBytes"},
     {"MTUDiscard", "/Metrics#/Oem/Nvidia/NeighborMTUDiscards"},
-    {"SymbolError", "/Metrics#/Oem/Nvidia/SymbolErrors"},
+    {"SymbolErrors", "/Metrics#/Oem/Nvidia/SymbolErrors"},
     {"LinkErrorRecoveryCounter", "/Metrics#/Oem/Nvidia/LinkErrorRecoveryCount"},
     {"LinkDownCount", "/Metrics#/Oem/Nvidia/LinkDownedCount"},
     {"RXRemotePhysicalErrorPkts",
@@ -164,6 +243,13 @@ static MetricNameMap ibPortInterfaceMap = {
     {"RXSwitchRelayErrorPkts", "/Metrics#/Oem/Nvidia/RXSwitchRelayErrors"},
     {"QP1DroppedPkts", "/Metrics#/Oem/Nvidia/QP1Dropped"},
     {"BitErrorRate", "/Metrics#/Oem/Nvidia/BitErrorRate"},
+    {"TotalRawBER", "/Metrics#/Oem/Nvidia/TotalRawBER"},
+    {"LinkDownReasonCode", "/Metrics#/Oem/Nvidia/LinkDownReasonCode"},
+    {"IntentionalLinkDownCount",
+     "/Metrics#/Oem/Nvidia/IntentionalLinkDownCount"},
+    {"UnintentionalLinkDownCount",
+     "/Metrics#/Oem/Nvidia/UnintentionalLinkDownCount"},
+    {"EffectiveBER", "/Metrics#/Oem/Nvidia/EffectiveBER"},
     {"TXWait", "/Metrics#/Oem/Nvidia/TXWait"},
     {"EffectiveError", "/Metrics#/Oem/Nvidia/EffectiveError"}};
 
@@ -487,6 +573,21 @@ inline string toPCIeType(const string& pcieType)
 }
 
 /**
+ * @brief Method to get the Link Down Reason Code of metric from PDI .
+ *
+ * @param[in] linkDownReasonCode
+ * @return string
+ */
+inline string toLinkDownReasonCode(const string& linkDownReasonCode)
+{
+    if (linkDownReasonCodeMap.find(linkDownReasonCode) !=
+        linkDownReasonCodeMap.end())
+    {
+        return linkDownReasonCodeMap[linkDownReasonCode];
+    }
+    return "Unknown";
+}
+/**
  * @brief Method to get the Power State Type of metric from PDI .
  *
  * @param[in] stateType
@@ -555,6 +656,13 @@ inline string translateReading(const string& ifaceName,
         if (metricName == "PCIeType")
         {
             metricValue = toPCIeType(reading);
+        }
+    }
+    else if (ifaceName == "xyz.openbmc_project.Metrics.IBPort")
+    {
+        if (metricName == "LinkDownReasonCode")
+        {
+            metricValue = toLinkDownReasonCode(reading);
         }
     }
     else if (ifaceName == "xyz.openbmc_project.Inventory.Decorator.PortState")
