@@ -252,7 +252,9 @@ static MetricNameMap ibPortInterfaceMap = {
      "/Metrics#/Oem/Nvidia/UnintentionalLinkDownCount"},
     {"EffectiveBER", "/Metrics#/Oem/Nvidia/EffectiveBER"},
     {"TXWait", "/Metrics#/Oem/Nvidia/TXWait"},
-    {"EffectiveError", "/Metrics#/Oem/Nvidia/EffectiveError"}};
+    {"EffectiveError", "/Metrics#/Oem/Nvidia/EffectiveError"},
+    {"IBG2RXPkts", "Metrics#/Oem/Nvidia/RXIbg2Packets"},
+    {"IBG2TXPkts", "Metrics#/Oem/Nvidia/TXIbg2Packets"}};
 
 /* Map for portMetricsOem1 interface pdi to redfish string based on metric name
  */
@@ -812,8 +814,17 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     }
     else if (deviceType == "NetworkAdapterPortMetrics")
     {
-        metricURI = "/redfish/v1/Chassis/" PLATFORMDEVICEPREFIX;
-        metricURI += deviceName;
+        std::regex chassisRegex("chassis/(.*)/NetworkAdapters");
+        std::smatch smatch;
+        metricURI = "/redfish/v1/Chassis/";
+        if (std::regex_search(devicePath, smatch, chassisRegex))
+        {
+            metricURI += smatch[1];
+        }
+        else
+        {
+            metricURI += PLATFORMDEVICEPREFIX + deviceName;
+        }
         metricURI += "/NetworkAdapters/";
         metricURI += deviceName;
         metricURI += "/Ports/";
