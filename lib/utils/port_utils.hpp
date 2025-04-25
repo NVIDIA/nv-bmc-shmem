@@ -48,9 +48,9 @@ static unordered_map<string, string> linkStateTypeMap = {
     {"xyz.openbmc_project.Inventory.Decorator.PortState.LinkStates.Enabled",
      "Enabled"},
     {"xyz.openbmc_project.Inventory.Decorator.PortState.LinkStates.Error",
-     "Error"},
+     "UnavailableOffline"},
     {"xyz.openbmc_project.Inventory.Decorator.PortState.LinkStates.Unknown",
-     "Unknown"}};
+     "Absent"}};
 
 /* Map for PowerSystemInputType pdi to redfish string */
 static unordered_map<string, string> powerSystemInputTypeTypeMap = {
