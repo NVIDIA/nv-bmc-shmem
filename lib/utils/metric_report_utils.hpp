@@ -245,6 +245,7 @@ static MetricNameMap ibPortInterfaceMap = {
     {"QP1DroppedPkts", "/Metrics#/Oem/Nvidia/QP1Dropped"},
     {"BitErrorRate", "/Metrics#/Oem/Nvidia/BitErrorRate"},
     {"TotalRawBER", "/Metrics#/Oem/Nvidia/TotalRawBER"},
+    {"TotalRawError", "/Metrics#/Oem/Nvidia/TotalRawError"},
     {"LinkDownReasonCode", "/Metrics#/Oem/Nvidia/LinkDownReasonCode"},
     {"IntentionalLinkDownCount",
      "/Metrics#/Oem/Nvidia/IntentionalLinkDownCount"},
