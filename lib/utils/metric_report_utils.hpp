@@ -213,6 +213,12 @@ static unordered_map<string, string> linkDownReasonCodeMap = {
     {"xyz.openbmc_project.Metrics.IBPort.LinkDownReasonCodes.PeerResetEvent",
      "PeerResetEvent"}};
 
+/* Map for MemorySpareChannelPresence pdi to redfish string */
+static unordered_map<string, string> presenceStateMap = {
+    {"com.nvidia.MemorySpareChannel.Presence.Present", "true"},
+    {"com.nvidia.MemorySpareChannel.Presence.NotPresent", "false"},
+    {"com.nvidia.MemorySpareChannel.Presence.Unavailable", "null"}};
+
 /* Map for portInfo interface pdi to redfish string based on metric name */
 static MetricNameMap portInfoInterfaceMap = {
     {"CurrentSpeed", "#/CurrentSpeedGbps"}, {"MaxSpeed", "#/MaxSpeedGbps"}};
@@ -608,6 +614,22 @@ inline string getPowerStateType(const string& stateType)
 }
 
 /**
+ * @brief Method to get the Memory Spare Channel presence metric from PDI .
+ *
+ * @param[in] presence
+ * @return string
+ */
+inline string toPresenceType(const string& presence)
+{
+    if (presenceStateMap.find(presence) != presenceStateMap.end())
+    {
+        return presenceStateMap[presence];
+    }
+    // Unknown or others
+    return "";
+}
+
+/**
  * @brief Method to get the Processor and cpu number for the device name.
  *
  * @param[in] deviceName
@@ -708,6 +730,13 @@ inline string translateReading(const string& ifaceName,
         if (metricName == "LinkDownReasonCode")
         {
             metricValue = toLinkDownReasonCode(reading);
+        }
+    }
+    else if (ifaceName == "com.nvidia.MemorySpareChannel")
+    {
+        if (metricName == "MemorySpareChannelPresence")
+        {
+            metricValue = toPresenceType(reading);
         }
     }
     else
