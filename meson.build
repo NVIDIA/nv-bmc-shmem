@@ -1,8 +1,8 @@
 project('nvshmem', 'cpp',
-    meson_version: '>= 0.62.2',
+    meson_version: '>=1.3.0',
     default_options: [
       'buildtype=debugoptimized',
-      'cpp_std=c++20',
+      'cpp_std=c++23',
       'warning_level=3',
       'werror=true',
       'libonly=' + (meson.is_subproject() ? 'true' : 'false'),
