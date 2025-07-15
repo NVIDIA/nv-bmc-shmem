@@ -364,8 +364,10 @@ static MetricNameMap pcieECCMap = {
     {"LanesInUse", "#/PCIeInterface/LanesInUse"}};
 
 /* Map for MemoryECC pdi to redfish string based on metric name*/
-static MetricNameMap memoryECCMap = {{"ueCount", "/UncorrectableECCErrorCount"},
-                                     {"ceCount", "/CorrectableECCErrorCount"}};
+static MetricNameMap memoryECCMap = {
+    {"ueCount", "/UncorrectableECCErrorCount"},
+    {"ceCount", "/CorrectableECCErrorCount"},
+    {"isThresholdExceeded", "/SRAMECCErrorThresholdExceeded"}};
 
 /* Map for OperatingConfig pdi to redfish string based on metric name*/
 static MetricNameMap operatingConfigMap = {
@@ -404,7 +406,8 @@ static MetricNameMap memoryRowRemappingMap = {
     {"LowRemappingAvailablityBankCount",
      "/Oem/Nvidia/RowRemapping/LowAvailabilityBankCount"},
     {"NoRemappingAvailablityBankCount",
-     "/Oem/Nvidia/RowRemapping/NoAvailabilityBankCount"}};
+     "/Oem/Nvidia/RowRemapping/NoAvailabilityBankCount"},
+    {"RowRemappingPendingState", "/Oem/Nvidia/RowRemappingPending"}};
 
 static MetricNameMap capacityUtilizationPercentMap{
     {"CapacityUtilizationPercent", "/CapacityUtilizationPercent"}};
@@ -696,6 +699,19 @@ inline string translateReading(const string& ifaceName,
         if (metricName == "LinkStatus")
         {
             metricValue = getLinkStatusType(reading);
+            // Nvlink Status.Health update
+            if (metricValue == "LinkDown" || metricValue == "LinkUp")
+            {
+                metricValue = "OK";
+            }
+            else if (metricValue == "NoLink")
+            {
+                metricValue = "Critical";
+            }
+            else
+            {
+                metricValue = "";
+            }
         }
         if (metricName == "LinkState")
         {
@@ -797,6 +813,28 @@ inline string generateURI(const string& deviceType, const string& deviceName,
             metricURI += "/ProcessorMetrics";
             propSuffix = getPropertySuffix(ifaceName, metricName);
         }
+        else if (ifaceName ==
+                 "xyz.openbmc_project.Inventory.Decorator.PortState")
+        {
+            if (metricName == "LinkStatus")
+            {
+                metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+                metricURI += "/Processors/";
+                metricURI += deviceName;
+                metricURI += "/Ports/";
+                metricURI += subDeviceName;
+                metricURI += "#/Status/Health";
+            }
+            else if (metricName == "LinkState")
+            {
+                metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+                metricURI += "/Processors/";
+                metricURI += deviceName;
+                metricURI += "/Ports/";
+                metricURI += subDeviceName;
+                metricURI += "#/Status/State";
+            }
+        }
         else
         {
             metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
@@ -853,7 +891,14 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         metricURI += "/ProcessorMetrics#";
         if (ifaceName == "xyz.openbmc_project.Memory.MemoryECC")
         {
-            metricURI += "/CacheMetricsTotal/LifeTime";
+            if (metricName == "isThresholdExceeded")
+            {
+                metricURI += "/Oem/Nvidia";
+            }
+            else
+            {
+                metricURI += "/CacheMetricsTotal/LifeTime";
+            }
         }
         else if (ifaceName == "xyz.openbmc_project.PCIe.PCIeECC")
         {
@@ -1050,14 +1095,28 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     }
     else if (deviceType == "HealthMetrics")
     {
-        metricURI = "/redfish/v1/Chassis/" PLATFORMDEVICEPREFIX;
-        std::string systemdId = PLATFORMDEVICEPREFIX + deviceName;
-        if (systemdId == PLATFORMSYSTEMID)
+        if (devicePath.find("inventory_software") != std::string::npos &&
+            ifaceName ==
+                "xyz.openbmc_project.State.Decorator.OperationalStatus")
         {
-            metricURI = "/redfish/v1/Systems/" PLATFORMDEVICEPREFIX;
+            if (metricName == "Functional")
+            {
+                metricURI = "/redfish/v1/UpdateService/SoftwareInventory/";
+                metricURI += deviceName;
+                metricURI += "#/Status/State";
+            }
         }
-        metricURI += deviceName;
-        propSuffix = getPropertySuffix(ifaceName, metricName);
+        else
+        {
+            metricURI = "/redfish/v1/Chassis/" PLATFORMDEVICEPREFIX;
+            std::string systemdId = PLATFORMDEVICEPREFIX + deviceName;
+            if (systemdId == PLATFORMSYSTEMID)
+            {
+                metricURI = "/redfish/v1/Systems/" PLATFORMDEVICEPREFIX;
+            }
+            metricURI += deviceName;
+            propSuffix = getPropertySuffix(ifaceName, metricName);
+        }
     }
     else
     {
@@ -1077,6 +1136,29 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         }
     }
     return metricURI;
+}
+
+/**
+ * @brief Method to translate D-Bus OperationalStatus to redfish
+ * OperationalStatus
+ *
+ * @param[in] metricName
+ * @param[in] reading
+ * @return string
+ */
+inline string translateOperationalStatus(const string& metricName,
+                                         const bool& reading)
+{
+    string metricValue;
+    if (metricName == "Functional")
+    {
+        metricValue = "Disabled";
+        if (reading == true)
+        {
+            metricValue = "Enabled";
+        }
+    }
+    return metricValue;
 }
 
 /**
@@ -1260,10 +1342,19 @@ inline pair<unordered_map<SHMKey, SHMValue>, bool>
         }
         else if (const bool* reading = get_if<bool>(&value))
         {
-            val = "false";
-            if (*reading == true)
+            if (devicePath.find("inventory_software") != std::string::npos &&
+                ifaceName ==
+                    "xyz.openbmc_project.State.Decorator.OperationalStatus")
             {
-                val = "true";
+                val = translateOperationalStatus(metricName, *reading);
+            }
+            else
+            {
+                val = "false";
+                if (*reading == true)
+                {
+                    val = "true";
+                }
             }
         }
         string sensorKey = devicePath + "/" + ifaceName + "." + metricName;
@@ -1331,10 +1422,18 @@ inline SHMValue getMetricValue(const string& metricName,
     }
     else if (const bool* reading = get_if<bool>(&value))
     {
-        val = "false";
-        if (*reading == true)
+        if (ifaceName ==
+            "xyz.openbmc_project.State.Decorator.OperationalStatus")
         {
-            val = "true";
+            val = translateOperationalStatus(metricName, *reading);
+        }
+        else
+        {
+            val = "false";
+            if (*reading == true)
+            {
+                val = "true";
+            }
         }
     }
     SHMValue shmValue = {"", val};
