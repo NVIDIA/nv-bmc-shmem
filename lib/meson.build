@@ -5,27 +5,31 @@ subdir('include')
 nv_shmem_gen = []
 
 phosphor_logging = dependency('phosphor-logging')
-nv_shmem_deps = [
-    phosphor_logging
-]
+nv_shmem_deps = [phosphor_logging]
 
 conf_data = configuration_data()
 conf_data.set('libonly', get_option('libonly'))
 conf_data.set_quoted('PLATFORMSYSTEMID', get_option('platform-system-id'))
-conf_data.set_quoted('PLATFORMDEVICEPREFIX', get_option('platform-device-prefix'))
-conf_data.set_quoted('SHM_NAMESPACE_CFG_JSON', join_paths(package_datadir, 'shm_namespace_config.json'))
-conf_data.set_quoted('SHM_MAPPING_JSON', join_paths(package_datadir, 'shm_mapping.json'))
+conf_data.set_quoted(
+    'PLATFORMDEVICEPREFIX',
+    get_option('platform-device-prefix'),
+)
+conf_data.set_quoted(
+    'SHM_NAMESPACE_CFG_JSON',
+    join_paths(package_datadir, 'shm_namespace_config.json'),
+)
+conf_data.set_quoted(
+    'SHM_MAPPING_JSON',
+    join_paths(package_datadir, 'shm_mapping.json'),
+)
 conf_data.set('LOG_INTERVAL_SECONDS', get_option('log_interval_seconds'))
 conf_data.set('MAX_LOG_ENTRIES', get_option('max_log_entries'))
 if get_option('enable-shm-debug').enabled()
-    add_project_arguments('-DENABLE_SHM_DEBUG', language : 'cpp')
+    add_project_arguments('-DENABLE_SHM_DEBUG', language: 'cpp')
 endif
 conf_h_dep = declare_dependency(
     include_directories: include_directories('.'),
-    sources: configure_file(
-        output: 'config.h',
-        configuration: conf_data
-    )
+    sources: configure_file(output: 'config.h', configuration: conf_data),
 )
 
 libnvshmem = static_library(
@@ -39,9 +43,7 @@ libnvshmem = static_library(
     'error_logger.cpp',
     implicit_include_directories: false,
     include_directories: [nv_shmem_includes],
-    dependencies: [
-        nv_shmem_deps,
-    ],
+    dependencies: [nv_shmem_deps],
     install: true,
 )
 
@@ -53,11 +55,12 @@ foreach dep : nv_shmem_deps
 endforeach
 
 import('pkgconfig').generate(
-  name: 'nvidia-shmem',
-  description: 'Nvidia Shared Memory Library',
-  version: meson.project_version(),
-  requires: nv_shmem_reqs,
-  libraries: libnvshmem)
+    name: 'nvidia-shmem',
+    description: 'Nvidia Shared Memory Library',
+    version: meson.project_version(),
+    requires: nv_shmem_reqs,
+    libraries: libnvshmem,
+)
 
 nv_shmem_dep = declare_dependency(
     include_directories: [nv_shmem_includes],
