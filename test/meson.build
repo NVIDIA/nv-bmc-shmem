@@ -8,34 +8,27 @@ if not gtest_dep.found() or not gmock_dep.found()
                 dependency('threads'),
                 gtest_proj.dependency('gtest'),
                 gtest_proj.dependency('gtest_main'),
-            ]
+            ],
         )
         gmock_dep = gtest_proj.dependency('gmock')
-  else
+    else
         assert(
             not get_option('tests').enabled(),
-            'Googletest is required if tests are enabled'
+            'Googletest is required if tests are enabled',
         )
-  endif
+    endif
 endif
 
 
-tests = [
-    'sensor_map_test',
-]
+tests = ['sensor_map_test']
 foreach t : tests
     test(
         'test_' + t.underscorify(),
         executable(
             'test-' + t.underscorify(),
             t + '.cpp',
-            dependencies: [
-                gmock_dep,
-                gtest_dep,
-                conf_h_dep,
-                nv_shmem_dep,
-            ],
-            include_directories: include_directories('..'),            
-        )
+            dependencies: [gmock_dep, gtest_dep, conf_h_dep, nv_shmem_dep],
+            include_directories: include_directories('..'),
+        ),
     )
 endforeach

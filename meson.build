@@ -1,28 +1,37 @@
-project('nvshmem', 'cpp',
+project(
+    'nvshmem',
+    'cpp',
     meson_version: '>=1.3.0',
     default_options: [
-      'buildtype=debugoptimized',
-      'cpp_std=c++23',
-      'warning_level=3',
-      'werror=true',
-      'libonly=' + (meson.is_subproject() ? 'true' : 'false'),
-      'tests=' + (meson.is_subproject() ? 'disabled' : 'auto'),
+        'buildtype=debugoptimized',
+        'cpp_std=c++23',
+        'warning_level=3',
+        'werror=true',
+        'libonly=' + (meson.is_subproject() ? 'true' : 'false'),
+        'tests=' + (meson.is_subproject() ? 'disabled' : 'auto'),
     ],
     version: '1.0',
 )
 
 add_project_arguments('-Wno-psabi', language: 'cpp')
-package_datadir = join_paths(get_option('prefix'), get_option('datadir'), meson.project_name())
+package_datadir = join_paths(
+    get_option('prefix'),
+    get_option('datadir'),
+    meson.project_name(),
+)
 
 if not get_option('nvidia-shmem').disabled()
-  subdir('lib')
-  subdir('tools')
-  install_data('configurations/shm_mapping.json', install_dir: package_datadir)
-  install_data('configurations/shm_namespace_config.json', install_dir: package_datadir)
+    subdir('lib')
+    subdir('tools')
+    install_data('configurations/shm_mapping.json', install_dir: package_datadir)
+    install_data(
+        'configurations/shm_namespace_config.json',
+        install_dir: package_datadir,
+    )
 endif
 
 if get_option('libonly')
-  subdir_done()
+    subdir_done()
 endif
 
 if not get_option('tests').disabled()

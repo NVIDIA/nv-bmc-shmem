@@ -95,9 +95,8 @@ struct SensorValue
     SensorValue(const std::string& sensorValue,
                 const std::string& metricProperty, const uint64_t timestamp,
                 const std::string& timestampStr) :
-        sensorValue(sensorValue),
-        metricProperty(metricProperty), timestamp(timestamp),
-        timestampStr(timestampStr)
+        sensorValue(sensorValue), metricProperty(metricProperty),
+        timestamp(timestamp), timestampStr(timestampStr)
     {}
 
     SensorValue& operator=(const SensorMapValue& mapValue)
