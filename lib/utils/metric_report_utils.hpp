@@ -232,10 +232,6 @@ static MetricNameMap ibPortInterfaceMap = {
     {"RXErrors", "/Metrics#/RXErrors"},
     {"TXPkts", "/Metrics#/Networking/TXFrames"},
     {"RXPkts", "/Metrics#/Networking/RXFrames"},
-    {"RXMulticastPkts", "/Metrics#/Networking/RXMulticastFrames"},
-    {"TXMulticastPkts", "/Metrics#/Networking/TXMulticastFrames"},
-    {"RXUnicastPkts", "/Metrics#/Networking/RXUnicastFrames"},
-    {"TXUnicastPkts", "/Metrics#/Networking/TXUnicastFrames"},
     {"TXDiscardPkts", "/Metrics#/Networking/TXDiscards"},
     {"MalformedPkts", "/Metrics#/Oem/Nvidia/MalformedPackets"},
     {"VL15DroppedPkts", "/Metrics#/Oem/Nvidia/VL15Dropped"},
@@ -263,6 +259,21 @@ static MetricNameMap ibPortInterfaceMap = {
     {"IBG2RXPkts", "Metrics#/Oem/Nvidia/RXIbg2Packets"},
     {"IBG2TXPkts", "Metrics#/Oem/Nvidia/TXIbg2Packets"}};
 
+/* Map for EthPort interface pdi to redfish string based on metric name */
+static MetricNameMap ethPortInterfaceMap = {
+    {"RXFCSErrors", "/Metrics#/Networking/RXFCSErrors"},
+    {"RXAlignmentErrors", "/Metrics#/Networking/RXFrameAlignmentErrors"},
+    {"RXFalseCarrierDetections", "/Metrics#/Networking/RXFalseCarrierErrors"},
+    {"RXRuntPkts", "/Metrics#/Networking/RXUndersizeFrames"},
+    {"RXJabberPkts", "/Metrics#/Networking/RXOversizeFrames"},
+    {"RXXONFrames", "/Metrics#/Networking/RXPauseXONFrames"},
+    {"RXXOFFFrames", "/Metrics#/Networking/RXPauseXOFFFrames"},
+    {"TXXONFrames", "/Metrics#/Networking/TXPauseXONFrames"},
+    {"TXXOFFFrames", "/Metrics#/Networking/TXPauseXOFFFrames"},
+    {"TXSingleCollisionFrames", "/Metrics#/Networking/TXSingleCollisions"},
+    {"TXMultipleCollisionFrames", "/Metrics#/Networking/TXMultipleCollisions"},
+    {"TXLateCollisionFrames", "/Metrics#/Networking/TXLateCollisions"},
+    {"TXExcessCollisionFrames", "/Metrics#/Networking/TXExcessiveCollisions"}};
 /* Map for portMetricsOem1 interface pdi to redfish string based on metric name
  */
 static MetricNameMap portMetricsOem1InterfaceMap = {
@@ -285,6 +296,17 @@ static MetricNameMap portMetricsOem3InterfaceMap = {
     {"TrainingError", "/Metrics#/Oem/Nvidia/NVLinkErrors/TrainingError"},
     {"TXWidth", "#/Oem/Nvidia/TXWidth"},
     {"RXWidth", "#/Oem/Nvidia/RXWidth"}};
+
+/* Map for PortPacketCounters interface pdi to redfish string based on metric
+ * name
+ */
+static MetricNameMap portPacketCountersInterfaceMap = {
+    {"RXUnicastPkts", "/Metrics#/Networking/RXUnicastFrames"},
+    {"RXMulticastPkts", "/Metrics#/Networking/RXMulticastFrames"},
+    {"RXBroadcastPkts", "/Metrics#/Networking/RXBroadcastFrames"},
+    {"TXUnicastPkts", "/Metrics#/Networking/TXUnicastFrames"},
+    {"TXMulticastPkts", "/Metrics#/Networking/TXMulticastFrames"},
+    {"TXBroadcastPkts", "/Metrics#/Networking/TXBroadcastFrames"}};
 
 /* Map for processor performance pdi to redfish string based on metric name*/
 static MetricNameMap processorPerfMap = {
@@ -478,12 +500,15 @@ static PDINameMap pdiNameMap = {
     {"xyz.openbmc_project.Inventory.Decorator.PortState",
      portStateInterfaceMap},
     {"xyz.openbmc_project.Metrics.IBPort", ibPortInterfaceMap},
+    {"xyz.openbmc_project.Metrics.EthPort", ethPortInterfaceMap},
     {"xyz.openbmc_project.Metrics.PortMetricsOem1",
      portMetricsOem1InterfaceMap},
     {"xyz.openbmc_project.Metrics.PortMetricsOem2",
      portMetricsOem2InterfaceMap},
     {"xyz.openbmc_project.Metrics.PortMetricsOem3",
      portMetricsOem3InterfaceMap},
+    {"xyz.openbmc_project.Metrics.PortPacketCounters",
+     portPacketCountersInterfaceMap},
     {"xyz.openbmc_project.State.ProcessorPerformance", processorPerfMap},
     {"com.nvidia.NVLink.NVLinkMetrics", nvLinkMetricsMap},
     {"com.nvidia.GPMMetrics", gpmMetricsMap},
