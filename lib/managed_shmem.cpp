@@ -70,7 +70,7 @@ ManagedShmem::ManagedShmem(const string& nameSpace, const int opts) :
         make_unique<void_allocator_t>(memory->get_segment_manager());
 }
 
-void ManagedShmem::TryReadLock()
+shmem_read_lock_t ManagedShmem::TryReadLock()
 {
     boost::posix_time::ptime abs_time =
         boost::posix_time::microsec_clock::universal_time() +
@@ -80,4 +80,6 @@ void ManagedShmem::TryReadLock()
     {
         throw LockAcquisitionException();
     }
+    // Return the lock object to keep it in scope
+    return lock;
 }
