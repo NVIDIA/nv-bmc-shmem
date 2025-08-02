@@ -56,7 +56,7 @@ ShmemKeyValuePairs Map<SensorMap, SensorValue>::getAllKeyValuePair()
 {
     ShmemKeyValuePairs values;
     SensorValue value;
-    TryReadLock();
+    auto lock = TryReadLock();
     auto itr = mapImpl->begin();
     for (; itr != mapImpl->end(); itr++)
     {
@@ -71,7 +71,7 @@ vector<SensorValue> Map<SensorMap, SensorValue>::getAllValues()
 {
     vector<SensorValue> values;
     SensorValue value;
-    TryReadLock();
+    auto lock = TryReadLock();
     auto itr = mapImpl->begin();
     for (; itr != mapImpl->end(); itr++)
     {
@@ -93,7 +93,7 @@ Map<SensorMap, SensorValue>::~Map()
 template <>
 bool Map<SensorMap, SensorValue>::getValue(const string& key, SensorValue& val)
 {
-    TryReadLock();
+    auto lock = TryReadLock();
     auto itr = mapImpl->find(getMapKey(key));
     if (itr != mapImpl->end())
     {

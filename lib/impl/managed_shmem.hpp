@@ -52,9 +52,12 @@ class ManagedShmem
     virtual ~ManagedShmem() = default;
     /**
      * @brief Read lock implementation to read values from shared memory.
+     * Returns the lock object to ensure it's held for the duration of the
+     * operation.
      *
+     * @return shmem_read_lock_t - The lock object that must be kept in scope
      */
-    void TryReadLock();
+    shmem_read_lock_t TryReadLock();
 
   protected:
     unique_ptr<boost::interprocess::managed_shared_memory> memory;
