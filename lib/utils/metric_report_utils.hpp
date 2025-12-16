@@ -478,14 +478,22 @@ static MetricNameMap powerSmoothingCurrentPwrProfileInterfaceMap = {
     {"TMPFloorPercent", "/TMPFloorPercent"},
     {"RampDownHysteresis", "/RampDownHysteresisSeconds"},
     {"RampDownRate", "/RampDownWattsPerSecond"},
-    {"RampUpRate", "/RampUpWattsPerSecond"}};
+    {"RampUpRate", "/RampUpWattsPerSecond"},
+    {"PrimaryFloorActivationOffset", "/PFAOffsetWatts"},
+    {"SecondaryPowerFloorSetting", "/SecondaryPowerFloorWatts"},
+    {"PrimaryFloorActivationWindowMultiplier", "/PFAWindowMultiplier"},
+    {"PrimaryFloorTargetWindowMultiplier", "/PFTWindowMultiplier"}};
 
 /* Map for PowerSmoothing.CurrentPowerProfile to redfish string based on metric
  * name*/
 static MetricNameMap powerSmoothingInterfaceMap = {
     {"PowerSmoothingEnabled", "/Enabled"},
     {"ImmediateRampDownEnabled", "/ImmediateRampDown"},
-    {"LifeTimeRemaining", "/RemainingLifetimeCircuitryPercent"}};
+    {"LifeTimeRemaining", "/RemainingLifetimeCircuitryPercent"},
+    {"DelayedPowerSmoothingSupported", "/DelayedPowerSmoothingSupported"},
+    {"FloorWindowMultiplier", "/FloorWindowMultiplierPeriod"},
+    {"MinPrimaryFloorActivationOffset", "/MinAllowedPFAOffsetWatts"},
+    {"MinPrimaryFloorActivationPoint", "/MinAllowedPFAPointWatts"}};
 
 /* Map for DOEReconfigPermissions/InbandReconfigPermissions to redfish string
  * based on metric name*/
