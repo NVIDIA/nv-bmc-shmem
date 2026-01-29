@@ -357,6 +357,19 @@ static MetricNameMap gpmMetricsMap = {
     {"DMMAUtilizationPercent", "/Oem/Nvidia/DMMAUtilizationPercent"},
     {"HMMAUtilizationPercent", "/Oem/Nvidia/HMMAUtilizationPercent"},
     {"IMMAUtilizationPercent", "/Oem/Nvidia/IMMAUtilizationPercent"},
+    {"NVEncUtilizationPercent", "/Oem/Nvidia/NVEncUtilizationPercent"},
+    {"NVEncInstanceUtilizationPercent",
+     "/Oem/Nvidia/NVEncInstanceUtilizationPercent"},
+    {"HostMemoryCacheHitPercent", "/Oem/Nvidia/HostMemoryCacheHitPercent"},
+    {"HostMemoryCacheMissPercent", "/Oem/Nvidia/HostMemoryCacheMissPercent"},
+    {"PeerMemoryCacheHitPercent", "/Oem/Nvidia/PeerMemoryCacheHitPercent"},
+    {"PeerMemoryCacheMissPercent", "/Oem/Nvidia/PeerMemoryCacheMissPercent"},
+    {"DRAMMemoryCacheHitPercent", "/Oem/Nvidia/DRAMMemoryCacheHitPercent"},
+    {"DRAMMemoryCacheMissPercent", "/Oem/Nvidia/DRAMMemoryCacheMissPercent"},
+    {"C2CRawTxBandwidthGbps", "/Oem/Nvidia/C2CRawTxBandwidthGbps"},
+    {"C2CRawRxBandwidthGbps", "/Oem/Nvidia/C2CRawRxBandwidthGbps"},
+    {"C2CDataTxBandwidthGbps", "/Oem/Nvidia/C2CDataTxBandwidthGbps"},
+    {"C2CDataRxBandwidthGbps", "/Oem/Nvidia/C2CDataRxBandwidthGbps"},
 };
 
 /* Map for ResetCounter MEtrics pdi to redfish string based on metric name*/
