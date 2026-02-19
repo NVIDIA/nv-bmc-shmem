@@ -397,7 +397,29 @@ static MetricNameMap pcieECCMap = {
     {"UnsupportedRequestCount", "/PCIeErrors/UnsupportedRequestCount"},
     {"PCIeType", "#/PCIeInterface/PCIeType"},
     {"MaxLanes", "#/PCIeInterface/MaxLanes"},
-    {"LanesInUse", "#/PCIeInterface/LanesInUse"}};
+    {"LanesInUse", "#/PCIeInterface/LanesInUse"},
+    {"FramingErrorCount", "/Oem/Nvidia/FramingErrorCount"},
+    {"LinkDownedCount", "/Oem/Nvidia/LinkDownedCount"},
+    {"DLLPCRCErrorCount", "/Oem/Nvidia/DLLPCRCErrorCount"}};
+
+/* Map for PCIeLaneError pdi to redfish string based on metric name*/
+static MetricNameMap pcIeLaneErrorMap = {
+    {"CDRErrorCount", "/Oem/Nvidia/CDRErrorCount"}};
+
+/* Map for PCIeTransactionCounter pdi to redfish string based on metric name*/
+static MetricNameMap pcieTransactionCounterMap = {
+    {"OutboundWritePktCount", "/PCIeMetrics/OutboundWriteTLPCount"},
+    {"OutboundWriteTransfer", "/PCIeMetrics/OutboundWriteBytes"},
+    {"ReqDroppedTag", "/PCIeMetrics/RequestsDroppedTagUnavailable"},
+    {"ReqDroppedCreditCompletion",
+     "/PCIeMetrics/RequestsDroppedCreditExhaustion"},
+    {"ReqDroppedNonPostCredit", "/PCIeMetrics/RequestsDroppedNonPostedCredit"},
+    {"OutboundReadPktCount", "/PCIeMetrics/OutboundReadTLPCount"},
+    {"OutboundReadTransfer", "/PCIeMetrics/OutboundReadBytes"},
+    {"OutboundTLPCount", "/PCIeMetrics/OutboundCompletionTLPCount"},
+    {"OutboundTLPsTransfer", "/PCIeMetrics/OutboundCompletionBytes"},
+    {"InboundTLPCount", "/Oem/Nvidia/PCIeMetrics/InboundCompletionTLPCount"},
+    {"InboundTLPsTransfer", "/Oem/Nvidia/PCIeMetrics/InboundCompletionBytes"}};
 
 /* Map for MemoryECC pdi to redfish string based on metric name*/
 static MetricNameMap memoryECCMap = {
@@ -536,6 +558,9 @@ static PDINameMap pdiNameMap = {
     {"com.nvidia.GPMMetrics", gpmMetricsMap},
     {"com.nvidia.ResetCounters.ResetCounterMetrics", resetCountersMetricsMap},
     {"xyz.openbmc_project.PCIe.PCIeECC", pcieECCMap},
+    {"xyz.openbmc_project.PCIe.PCIeLaneError", pcIeLaneErrorMap},
+    {"xyz.openbmc_project.PCIe.PCIeTransactionCounter",
+     pcieTransactionCounterMap},
     {"xyz.openbmc_project.Inventory.Item.Dimm.MemoryMetrics",
      capacityUtilizationPercentMap},
     {"xyz.openbmc_project.Memory.MemoryECC", memoryECCMap},
@@ -1114,7 +1139,9 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         metricURI += deviceName;
         metricURI += "/Ports/";
         metricURI += subDeviceName;
-        if (ifaceName == "xyz.openbmc_project.PCIe.PCIeECC")
+        if (ifaceName == "xyz.openbmc_project.PCIe.PCIeECC" ||
+            ifaceName == "xyz.openbmc_project.PCIe.PCIeTransactionCounter" ||
+            ifaceName == "xyz.openbmc_project.PCIe.PCIeLaneError")
         {
             metricURI += "/Metrics#";
         }
