@@ -835,6 +835,39 @@ inline string translateReading(const string& ifaceName,
 }
 
 /**
+ * @brief This method will form suffix for redfish URI for device/sub device
+ * property from device path.
+ *
+ * @param[in] ifaceName - pdi name
+ * @param[in] devicePath - device path
+ * @return string
+ */
+inline string getPropertySuffixFromPath(const string& ifaceName,
+                                        const string& devicePath)
+{
+    string suffix;
+    if (ifaceName == "xyz.openbmc_project.Metric.Value")
+    {
+        if (devicePath.find("PowerBRKAssertionTime") != std::string::npos)
+        {
+            suffix = "#/Oem/Nvidia/PowerBrakeAssertionDuration";
+        }
+        else if (devicePath.find("PageRetirementCount") != std::string::npos)
+        {
+            suffix = "#/Oem/Nvidia/MemoryPageRetirementCount";
+        }
+        else if (devicePath.find("TjMaxDramIndex") != std::string::npos)
+        {
+            suffix = "#/Oem/Nvidia/TjMaxDramIndex";
+        }
+        else if (devicePath.find("CpuUptime") != std::string::npos)
+        {
+            suffix = "#/Oem/Nvidia/CPUptime";
+        }
+    }
+    return suffix;
+}
+/**
  * @brief Method to generate metric property uri from namespace, devicename and
  * other properties.
  *
@@ -864,22 +897,18 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     {
         if (ifaceName == "xyz.openbmc_project.Sensor.Value")
         {
-            std::regex pageRetirementRegex("PageRetirementCount_\\d+$");
-            if (std::regex_search(subDeviceName, pageRetirementRegex))
-            {
-                metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
-                metricURI += "/Processors/";
-                metricURI += deviceName;
-                metricURI += "/ProcessorMetrics";
-                propSuffix = "#/Oem/Nvidia/MemoryPageRetirementCount";
-            }
-            else
-            {
-                metricURI = "/redfish/v1/Chassis/" PLATFORMDEVICEPREFIX;
-                metricURI += deviceName;
-                metricURI += "/Sensors/";
-                metricURI += subDeviceName;
-            }
+            metricURI = "/redfish/v1/Chassis/" PLATFORMDEVICEPREFIX;
+            metricURI += deviceName;
+            metricURI += "/Sensors/";
+            metricURI += subDeviceName;
+        }
+        else if (ifaceName == "xyz.openbmc_project.Metric.Value")
+        {
+            metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+            metricURI += "/Processors/";
+            metricURI += deviceName;
+            metricURI += "/ProcessorMetrics";
+            propSuffix = getPropertySuffixFromPath(ifaceName, devicePath);
         }
         else if (ifaceName == "com.nvidia.MemorySpareChannel" ||
                  ifaceName ==
