@@ -128,7 +128,7 @@ MatchingNameSpaces SHMSensorAggregator::parseDevicePath(
                             string(devicePathObj.parent_path().filename());
                         subDeviceName = "";
                     }
-                    if (devicePath.find("xyz/openbmc_project/metric") == 0)
+                    else if (devicePath.find("xyz/openbmc_project/metric") == 0)
                     {
                         subDeviceName = string(devicePathObj.filename());
                         deviceName = "";
