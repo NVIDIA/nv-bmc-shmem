@@ -862,7 +862,7 @@ inline string getPropertySuffixFromPath(const string& ifaceName,
         }
         else if (devicePath.find("CpuUptime") != std::string::npos)
         {
-            suffix = "#/Oem/Nvidia/CPUptime";
+            suffix = "#/Oem/Nvidia/CPUUptime";
         }
     }
     return suffix;
@@ -889,6 +889,10 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     if (deviceType == "PlatformEnvironmentMetrics")
     {
         metricURI = "/redfish/v1/Chassis/";
+        if (deviceName.find(PLATFORMDEVICEPREFIX) != 0)
+        {
+            metricURI += PLATFORMDEVICEPREFIX;
+        }
         metricURI += deviceName;
         metricURI += "/Sensors/";
         metricURI += subDeviceName;
@@ -897,7 +901,11 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     {
         if (ifaceName == "xyz.openbmc_project.Sensor.Value")
         {
-            metricURI = "/redfish/v1/Chassis/" PLATFORMDEVICEPREFIX;
+            metricURI = "/redfish/v1/Chassis/";
+            if (deviceName.find(PLATFORMDEVICEPREFIX) != 0)
+            {
+                metricURI += PLATFORMDEVICEPREFIX;
+            }
             metricURI += deviceName;
             metricURI += "/Sensors/";
             metricURI += subDeviceName;
