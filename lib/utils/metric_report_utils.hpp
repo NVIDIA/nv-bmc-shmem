@@ -537,6 +537,9 @@ static MetricNameMap reConfigPermission = {
     {"AllowOneShotConfig", "/AllowOneShotConfig"},
     {"AllowPersistentConfig", "/AllowPersistentConfig"}};
 
+/* Map for PowerCap to redfish string based on metric name*/
+static MetricNameMap powerCapMap = {{"PowerCap", "/PowerLimitWatts/SetPoint"}};
+
 /* This map is for PDI name to metric name. Key is pdi name and value is
  * corresponding metric name map */
 static PDINameMap pdiNameMap = {
@@ -586,7 +589,8 @@ static PDINameMap pdiNameMap = {
     {"com.nvidia.PowerSmoothing.PowerSmoothing", powerSmoothingInterfaceMap},
     {"com.nvidia.PowerSmoothing.CurrentPowerProfile",
      powerSmoothingCurrentPwrProfileInterfaceMap},
-    {"com.nvidia.InbandReconfigSettings", reConfigPermission}};
+    {"com.nvidia.InbandReconfigSettings", reConfigPermission},
+    {"xyz.openbmc_project.Control.Power.Cap", powerCapMap}};
 
 /**
  * @brief This method will form suffix for redfish URI for device/sub device
@@ -1113,6 +1117,13 @@ inline string generateURI(const string& deviceType, const string& deviceName,
                     metricURI += childDeviceName;
                 }
             }
+        }
+        else if (ifaceName == "xyz.openbmc_project.Control.Power.Cap")
+        {
+            metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+            metricURI += "/Processors/";
+            metricURI += deviceName;
+            metricURI += "/EnvironmentMetrics#";
         }
 
         propSuffix = getPropertySuffix(ifaceName, metricName);
