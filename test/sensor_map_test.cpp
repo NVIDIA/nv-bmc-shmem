@@ -207,3 +207,129 @@ TEST_F(SensorMapTests, testSensorMapReadOnlyMapErrorInUpdate)
                                  1699255438, "1/1/2022");
     EXPECT_THROW(mShmemROnly->insert(sensorName, value), std::runtime_error);
 }
+
+TEST_F(SensorMapTests, testSensorMapGetAllKeyValuePair)
+{
+    mShmem->clear();
+    EXPECT_EQ(mShmem->size(), 0);
+
+    auto sensorName = "HGX_Chassis_0_My_Sensor_kv";
+    nv::shmem::SensorValue value(std::string("42"),
+                                 "/redfish/v1/HGX_Chassis_0/Sensors/Sensor_kv",
+                                 1699255438, "1/1/2022");
+    mShmem->insert(sensorName, value);
+
+    auto kvPairs = mShmem->getAllKeyValuePair();
+    EXPECT_EQ(kvPairs.size(), 1);
+    EXPECT_EQ(kvPairs.begin()->second, "42");
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateValueAndTimeStamp)
+{
+    mShmem->clear();
+    EXPECT_EQ(mShmem->size(), 0);
+
+    auto sensorName = "HGX_Chassis_0_My_Sensor_vts";
+    nv::shmem::SensorValue value(std::string("10"),
+                                 "/redfish/v1/HGX_Chassis_0/Sensors/Sensor_vts",
+                                 1000, "1/1/2022");
+    mShmem->insert(sensorName, value);
+
+    bool updated = mShmem->updateValueAndTimeStamp(sensorName, "99", 1699255440,
+                                                   "2/2/2023");
+    EXPECT_TRUE(updated);
+
+    nv::shmem::SensorValue readValue;
+    EXPECT_TRUE(mShmem->getValue(sensorName, readValue));
+    EXPECT_EQ(readValue.sensorValue, "99");
+    EXPECT_EQ(readValue.timestamp, static_cast<uint64_t>(1699255440));
+    EXPECT_EQ(readValue.timestampStr, "2/2/2023");
+}
+
+TEST_F(SensorMapTests, testSensorMapGetValue_NotFound)
+{
+    mShmem->clear();
+    EXPECT_EQ(mShmem->size(), 0);
+
+    nv::shmem::SensorValue readValue;
+    EXPECT_FALSE(mShmem->getValue("nonexistent_key", readValue));
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateValue_NotFound)
+{
+    mShmem->clear();
+    EXPECT_EQ(mShmem->size(), 0);
+
+    EXPECT_FALSE(mShmem->updateValue("nonexistent_key", "some_value"));
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateTimestamp_NotFound)
+{
+    mShmem->clear();
+    EXPECT_EQ(mShmem->size(), 0);
+
+    EXPECT_FALSE(mShmem->updateTimestamp("nonexistent_key", 12345, "1/1/2022"));
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateValueAndTimeStamp_NotFound)
+{
+    mShmem->clear();
+    EXPECT_EQ(mShmem->size(), 0);
+
+    EXPECT_FALSE(
+        mShmem->updateValueAndTimeStamp("nonexistent_key", "v", 0, "t"));
+}
+
+TEST_F(SensorMapTests, testSensorMapGetFreeSize)
+{
+    size_t freeSize = mShmem->getFreeSize();
+    EXPECT_GT(freeSize, 0u);
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateValue_ReadOnly)
+{
+    // Ensure there's an entry in the map first (created via the writable map)
+    auto sensorName = "HGX_Chassis_0_My_Sensor_ro_update";
+    nv::shmem::SensorValue value(std::string("10"),
+                                 "/redfish/v1/HGX_Chassis_0/Sensors/Sensor_ro",
+                                 1000, "1/1/2022");
+    mShmem->insert(sensorName, value);
+
+    auto name_space = "maptest";
+    auto mShmemROnly = std::make_unique<Map<SensorMap, SensorValue>>(name_space,
+                                                                     O_RDONLY);
+    EXPECT_THROW(mShmemROnly->updateValue(sensorName, "99"),
+                 std::runtime_error);
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateTimestamp_ReadOnly)
+{
+    auto name_space = "maptest";
+    auto mShmemROnly = std::make_unique<Map<SensorMap, SensorValue>>(name_space,
+                                                                     O_RDONLY);
+    EXPECT_THROW(mShmemROnly->updateTimestamp("any_key", 12345, "1/1/2022"),
+                 std::runtime_error);
+}
+
+TEST_F(SensorMapTests, testSensorMapUpdateValueAndTimeStamp_ReadOnly)
+{
+    auto name_space = "maptest";
+    auto mShmemROnly = std::make_unique<Map<SensorMap, SensorValue>>(name_space,
+                                                                     O_RDONLY);
+    EXPECT_THROW(mShmemROnly->updateValueAndTimeStamp("any_key", "v", 0, "t"),
+                 std::runtime_error);
+}
+
+TEST_F(SensorMapTests, testSensorMapErase_ReadOnly)
+{
+    auto mShmemROnly = std::make_unique<Map<SensorMap, SensorValue>>("maptest",
+                                                                     O_RDONLY);
+    EXPECT_THROW(mShmemROnly->erase("any_key"), std::runtime_error);
+}
+
+TEST_F(SensorMapTests, testSensorMapClear_ReadOnly)
+{
+    auto mShmemROnly = std::make_unique<Map<SensorMap, SensorValue>>("maptest",
+                                                                     O_RDONLY);
+    EXPECT_THROW(mShmemROnly->clear(), std::runtime_error);
+}
