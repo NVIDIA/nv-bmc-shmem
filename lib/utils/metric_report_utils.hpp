@@ -871,6 +871,67 @@ inline string getPropertySuffixFromPath(const string& ifaceName,
     }
     return suffix;
 }
+
+/**
+ * @brief Mapping table that decouples D-Bus metric naming from the Redfish
+ *        Oem.Nvidia property names emitted on the CPU Port resource. Each
+ *        entry holds:
+ *          metricLeafToken - substring identifying the metric in the D-Bus
+ *                            Metric.Value object's leaf (filename).
+ *          portLeafToken   - corresponding Port leaf substring; used to
+ *                            derive the Port id from the metric leaf when
+ *                            the Port id is not otherwise available.
+ *          oemPropertyName - Redfish Oem.Nvidia property name on the Port.
+ */
+struct CpuPortOemMetricMapping
+{
+    std::string_view metricLeafToken;
+    std::string_view portLeafToken;
+    std::string_view oemPropertyName;
+};
+
+inline constexpr std::array<CpuPortOemMetricMapping, 3>
+    cpuPortOemMetricMappings = {{
+        {"CLinkPacketCrcCount", "CLink", "PacketCRCErrors"},
+        {"CLinkPacketReplayCount", "CLink", "PacketReplayErrors"},
+        {"CLinkBandwidth", "CLink", "BandwidthBytes"},
+    }};
+
+/**
+ * @brief derive the Port id and Oem.Nvidia property name from the static
+ *        cpuPortOemMetricMappings table for CLink/NVLink Port
+ *        telemetry
+ *
+ * @param[in]  devicePath   Full D-Bus path of the Metric.Value object.
+ * @param[out] portId       Derived Redfish Port id segment.
+ * @param[out] oemProperty  Derived Oem.Nvidia property name.
+ * @return true on a recognized CLink/NVLink Port metric.
+ */
+inline bool getCpuPortMetricNames(const string& devicePath, string& portId,
+                                  string& oemProperty)
+{
+    sdbusplus::message::object_path objPath(devicePath);
+    const string metricLeaf = objPath.filename();
+    if (metricLeaf.empty())
+    {
+        return false;
+    }
+
+    for (const auto& mapping : cpuPortOemMetricMappings)
+    {
+        const std::size_t tokenPos = metricLeaf.find(mapping.metricLeafToken);
+        if (tokenPos == string::npos)
+        {
+            continue;
+        }
+        portId = metricLeaf;
+        portId.replace(tokenPos, mapping.metricLeafToken.size(),
+                       mapping.portLeafToken);
+        oemProperty = string(mapping.oemPropertyName);
+        return true;
+    }
+    return false;
+}
 /**
  * @brief Method to generate metric property uri from namespace, devicename and
  * other properties.
@@ -916,11 +977,25 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         }
         else if (ifaceName == "xyz.openbmc_project.Metric.Value")
         {
-            metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
-            metricURI += "/Processors/";
-            metricURI += deviceName;
-            metricURI += "/ProcessorMetrics";
-            propSuffix = getPropertySuffixFromPath(ifaceName, devicePath);
+            string portId;
+            string oemProperty;
+            if (getCpuPortMetricNames(devicePath, portId, oemProperty))
+            {
+                metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+                metricURI += "/Processors/";
+                metricURI += deviceName;
+                metricURI += "/Ports/";
+                metricURI += portId;
+                propSuffix = "#/Oem/Nvidia/" + oemProperty;
+            }
+            else
+            {
+                metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
+                metricURI += "/Processors/";
+                metricURI += deviceName;
+                metricURI += "/ProcessorMetrics";
+                propSuffix = getPropertySuffixFromPath(ifaceName, devicePath);
+            }
         }
         else if (ifaceName == "com.nvidia.MemorySpareChannel" ||
                  ifaceName ==
