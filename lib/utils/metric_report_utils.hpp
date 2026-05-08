@@ -890,11 +890,14 @@ struct CpuPortOemMetricMapping
     std::string_view oemPropertyName;
 };
 
-inline constexpr std::array<CpuPortOemMetricMapping, 3>
+inline constexpr std::array<CpuPortOemMetricMapping, 6>
     cpuPortOemMetricMappings = {{
         {"CLinkPacketCrcCount", "CLink", "PacketCRCErrors"},
         {"CLinkPacketReplayCount", "CLink", "PacketReplayErrors"},
         {"CLinkBandwidth", "CLink", "BandwidthBytes"},
+        {"NVLinkPacketCrcCount", "NVLink", "PacketCRCErrors"},
+        {"NVLinkPacketReplayCount", "NVLink", "PacketReplayErrors"},
+        {"NVLinkBandwidth", "NVLink", "BandwidthBytes"},
     }};
 
 /**
