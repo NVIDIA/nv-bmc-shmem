@@ -60,3 +60,41 @@ test(
         ],
     ),
 )
+
+# config_json_reader branch-coverage tests
+#
+# Each binary is compiled with a custom config.h (generated in the cfg_XXX
+# subdir) that overrides SHM_MAPPING_JSON / SHM_NAMESPACE_CFG_JSON to point
+# at fixture files or nonexistent paths.  config_json_reader.cpp and
+# error_logger.cpp are compiled directly so the custom paths take effect;
+# nv_shmem_dep is deliberately excluded to avoid duplicate symbols.
+
+subdir('cfg_nofile')
+subdir('cfg_malformed')
+subdir('cfg_no_ns')
+subdir('cfg_no_producers')
+
+reader_srcs = [
+    '../lib/config_json_reader.cpp',
+    '../lib/error_logger.cpp',
+]
+
+reader_incs_base = [
+    include_directories('../lib'),
+    include_directories('../lib/include'),
+]
+
+foreach cfg_name : ['nofile', 'malformed', 'no_ns', 'no_producers']
+    test(
+        'test_config_json_reader_' + cfg_name + '_test',
+        executable(
+            'test-config_json_reader_' + cfg_name + '_test',
+            'config_json_reader_' + cfg_name + '_test.cpp',
+            reader_srcs,
+            include_directories: [
+                include_directories('cfg_' + cfg_name),
+            ] + reader_incs_base,
+            dependencies: [gmock_dep, gtest_dep, phosphor_logging],
+        ),
+    )
+endforeach
