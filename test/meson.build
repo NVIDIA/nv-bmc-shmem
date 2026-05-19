@@ -74,10 +74,7 @@ subdir('cfg_malformed')
 subdir('cfg_no_ns')
 subdir('cfg_no_producers')
 
-reader_srcs = [
-    '../lib/config_json_reader.cpp',
-    '../lib/error_logger.cpp',
-]
+reader_srcs = ['../lib/config_json_reader.cpp', '../lib/error_logger.cpp']
 
 reader_incs_base = [
     include_directories('../lib'),
@@ -91,9 +88,7 @@ foreach cfg_name : ['nofile', 'malformed', 'no_ns', 'no_producers']
             'test-config_json_reader_' + cfg_name + '_test',
             'config_json_reader_' + cfg_name + '_test.cpp',
             reader_srcs,
-            include_directories: [
-                include_directories('cfg_' + cfg_name),
-            ] + reader_incs_base,
+            include_directories: [include_directories('cfg_' + cfg_name)] + reader_incs_base,
             dependencies: [gmock_dep, gtest_dep, phosphor_logging],
         ),
     )

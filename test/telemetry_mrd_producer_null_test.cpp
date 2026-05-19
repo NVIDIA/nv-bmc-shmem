@@ -31,8 +31,7 @@
 // called first).
 // =========================================================================
 
-TEST(TelemetryMrdProducerNullTest,
-     UpdateTelemetry_AggregatorNull_ReturnsFalse)
+TEST(TelemetryMrdProducerNullTest, UpdateTelemetry_AggregatorNull_ReturnsFalse)
 {
     // sensorAggregator == nullptr (namespaceInit never called) → return false
     DbusVariantType value = 0.0;
