@@ -30,6 +30,7 @@ tests = [
     'config_json_reader_null_test',
     'shm_sensormap_intf_test',
     'telemetry_mrd_producer_test',
+    'telemetry_mrd_producer_null_test',
     'telemetry_mrd_client_test',
 ]
 foreach t : tests
