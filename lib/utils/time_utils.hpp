@@ -128,10 +128,14 @@ bool fromDurationItem(string_view& fmt, const char postfix,
         return false;
     }
 
-    out += FromTime(ticks);
     const auto maxConversionRange =
         chrono::duration_cast<FromTime>(chrono::milliseconds::max()).count();
-    if (out < FromTime(ticks) || maxConversionRange < ticks)
+    if (maxConversionRange < ticks)
+    {
+        return false;
+    }
+    out += FromTime(ticks);
+    if (out < FromTime(ticks))
     {
         return false;
     }
