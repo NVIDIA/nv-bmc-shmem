@@ -362,3 +362,14 @@ TEST(TelemetryMrdProducerTest,
         "xyz.openbmc_project.Memory.MemoryECC", "ueCount", value, 1000ULL, 0,
         "");
 }
+
+TEST(TelemetryMrdProducerTest,
+     UpdateTelemetry_RcNonZero_TimestampZero_TakesElseBranch)
+{
+    // rc != 0 but timestamp == 0 → condition (rc != 0 && timestamp != 0)
+    // evaluates false → else branch → updateSHMObject (line 109 3rd arm)
+    DbusVariantType value = static_cast<uint64_t>(0);
+    nv::shmem::AggregationService::updateTelemetry(
+        "/xyz/openbmc_project/inventory/system/processors/GPU_0",
+        "xyz.openbmc_project.Memory.MemoryECC", "ueCount", value, 0ULL, -1, "");
+}

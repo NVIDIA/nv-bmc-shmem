@@ -1,0 +1,16 @@
+{
+    "SensorNamespaces": [
+        {
+            "Namespace": "ValidNamespace",
+            "ObjectpathKeywords": "sensors/temperature",
+            "PropertyList": ["Value"]
+        },
+        {
+            "MissingAllRequiredKeys": "invalid entry"
+        },
+        {
+            "Namespace": "PartialNamespace",
+            "ObjectpathKeywords": "sensors/power"
+        }
+    ]
+}

@@ -101,3 +101,14 @@ TEST(TelemetryMrdClientTest, GetAllKeyValuePair_ExistingShmNamespace_ReturnsMap)
     auto result = getAllKeyValuePair("gpumgrd_ProcessorMetrics_0");
     EXPECT_FALSE(result.empty());
 }
+
+TEST(TelemetryMrdClientTest,
+     GetAllKeyValuePair_AlreadyOpenedNamespace_SkipsInsert)
+{
+    // "gpumgrd_ProcessorMetrics_0" was already opened in the previous test
+    // and is in the function-static sensor_map. A second call skips the insert
+    // (line 45 false branch) and goes directly to line 51 → getAllKeyValuePair.
+    // The SHM segment may be empty by now; we verify only that no exception is
+    // thrown (the branch is covered regardless of content).
+    EXPECT_NO_THROW(getAllKeyValuePair("gpumgrd_ProcessorMetrics_0"));
+}
