@@ -57,7 +57,9 @@ ShmemKeyValuePairs getAllKeyValuePair(const std::string& mrdNamespace)
                    "EXCEPTION", e.what(), "MRD", mrdNamespace);
         throw NameSpaceNotFoundException();
     }
-    throw NoElementsException();
+    // The try-block either returns or throws, and the catch always
+    // re-throws, so the prior final `throw NoElementsException();` here
+    // was unreachable. Removed to silence Coverity UNREACHABLE.
 }
 
 vector<SensorValue> getAllMRDValues(const string& mrdNamespace)

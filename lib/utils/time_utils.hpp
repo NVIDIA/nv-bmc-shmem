@@ -317,7 +317,19 @@ template <class IntType>
 constexpr tuple<IntType, unsigned, unsigned> civilFromDays(IntType z) noexcept
 {
     z += 719468;
-    IntType era = (z >= 0 ? z : z - 146096) / 146097;
+    // The ternary handles negative inputs for signed IntType instantiations.
+    // For unsigned IntType the negative branch is statically dead, and
+    // Coverity flags `z - 146096` as unreachable. Split with `if constexpr`
+    // so each instantiation only emits its valid branch.
+    IntType era;
+    if constexpr (std::is_signed_v<IntType>)
+    {
+        era = (z >= 0 ? z : z - 146096) / 146097;
+    }
+    else
+    {
+        era = z / 146097;
+    }
     unsigned doe = static_cast<unsigned>(z - era * 146097); // [0, 146096]
     unsigned yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) /
                    365;                                     // [0, 399]

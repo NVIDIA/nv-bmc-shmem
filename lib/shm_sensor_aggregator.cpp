@@ -296,13 +296,36 @@ bool SHMSensorAggregator::updateNanValue(
     string timeStampStr =
         nv::sensor_aggregation::metricUtils::getDateTimeUintMs(systemTimestamp);
     auto sensorKey = getSensorMapKey(devicePath, interface, propName);
-    if (nameSpaceMap.find(sensorKey) == nameSpaceMap.end() &&
-        notApplicableKeys.find(sensorKey) == notApplicableKeys.end())
+    // Read nameSpaceMap under nameSpaceMapLock; writers at insertShmemObject
+    // and handleArrayUpdates hold the same lock, so an unprotected read here
+    // races with concurrent inserts or arraySize updates.
+    // Value-initialize so arraySize (POD scalar) is zeroed on the
+    // !inNameSpaceMap branch where we never assign from the map.
+    NameSpaceFields fields{};
+    bool inNameSpaceMap;
+    {
+        scoped_lock lock(nameSpaceMapLock);
+        auto it = nameSpaceMap.find(sensorKey);
+        inNameSpaceMap = (it != nameSpaceMap.end());
+        if (inNameSpaceMap)
+        {
+            fields = it->second;
+        }
+    }
+    // notApplicableKeys is mutated by writers under notApplicableKeysLock, so
+    // this read must take the same lock to avoid the same race class fixed
+    // above for nameSpaceMap.
+    bool inNotApplicableKeys;
+    {
+        scoped_lock lock(notApplicableKeysLock);
+        inNotApplicableKeys =
+            (notApplicableKeys.find(sensorKey) != notApplicableKeys.end());
+    }
+    if (!inNameSpaceMap && !inNotApplicableKeys)
     {
         return status;
     }
-    const auto [nameSpace, deviceName, subDeviceName,
-                arraySize] = nameSpaceMap[sensorKey];
+    const auto& [nameSpace, deviceName, subDeviceName, arraySize] = fields;
     string shmNamespace = producerName + "_" + PLATFORMDEVICEPREFIX +
                           nameSpace + "_0";
 
@@ -500,12 +523,26 @@ bool SHMSensorAggregator::updateSHMObject(const string& devicePath,
 {
     auto sensorKey = getSensorMapKey(devicePath, interface, propName);
     bool status = true;
-    if (nameSpaceMap.find(sensorKey) != nameSpaceMap.end())
+    // Read nameSpaceMap under nameSpaceMapLock; writers elsewhere hold it,
+    // so an unprotected find/copy here races with concurrent mutators.
+    // Value-initialize so arraySize (POD scalar) is zeroed on the
+    // !inNameSpaceMap branch where we never assign from the map.
+    NameSpaceFields fields{};
+    bool inNameSpaceMap;
+    {
+        scoped_lock lock(nameSpaceMapLock);
+        auto it = nameSpaceMap.find(sensorKey);
+        inNameSpaceMap = (it != nameSpaceMap.end());
+        if (inNameSpaceMap)
+        {
+            fields = it->second;
+        }
+    }
+    if (inNameSpaceMap)
     {
         SHMDEBUG("SHMEMDEBUG: Updating existing object: {SENSOR_KEY}",
                  "SENSOR_KEY", string(sensorKey));
-        auto [nameSpace, deviceName, subDeviceName,
-              arraySize] = nameSpaceMap[sensorKey];
+        auto& [nameSpace, deviceName, subDeviceName, arraySize] = fields;
 
         const uint64_t systemTimestamp =
             static_cast<uint64_t>(
@@ -550,7 +587,15 @@ bool SHMSensorAggregator::updateSHMObject(const string& devicePath,
         }
         return status;
     }
-    if (notApplicableKeys.find(sensorKey) != notApplicableKeys.end())
+    // Read notApplicableKeys under notApplicableKeysLock; writers hold it, so
+    // an unprotected find here races with concurrent inserts.
+    bool inNotApplicableKeys;
+    {
+        scoped_lock lock(notApplicableKeysLock);
+        inNotApplicableKeys =
+            (notApplicableKeys.find(sensorKey) != notApplicableKeys.end());
+    }
+    if (inNotApplicableKeys)
     {
         SHMDEBUG("SHMEMDEBUG: Sensor key not applicable: {SENSOR_KEY}",
                  "SENSOR_KEY", sensorKey);

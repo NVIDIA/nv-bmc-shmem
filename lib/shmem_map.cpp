@@ -84,9 +84,18 @@ vector<SensorValue> Map<SensorMap, SensorValue>::getAllValues()
 template <>
 Map<SensorMap, SensorValue>::~Map()
 {
-    if (opts & O_CREAT)
+    try
     {
-        memory->destroy<SensorMap>(string(nameSpace + "map").c_str());
+        if (opts & O_CREAT)
+        {
+            memory->destroy<SensorMap>(string(nameSpace + "map").c_str());
+        }
+    }
+    catch (...)
+    {
+        // Destructors must not propagate exceptions. The string ctor and
+        // boost::interprocess::destroy can throw under low-memory or shm
+        // corruption; swallow here so stack unwinding completes safely.
     }
 }
 

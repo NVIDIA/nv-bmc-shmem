@@ -26,6 +26,7 @@ using namespace nv::sensor_aggregation;
 using namespace nv::shmem;
 
 int main()
+try
 {
     if (AggregationService::namespaceInit("gpumgrd"))
     {
@@ -240,4 +241,16 @@ int main()
     }
     sleep(300);
     return 0;
+}
+catch (const std::exception& e)
+{
+    std::cerr << "aggregation_service_tester: unhandled exception: " << e.what()
+              << std::endl;
+    return EXIT_FAILURE;
+}
+catch (...)
+{
+    std::cerr << "aggregation_service_tester: unknown unhandled exception"
+              << std::endl;
+    return EXIT_FAILURE;
 }
