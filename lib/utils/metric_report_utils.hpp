@@ -874,44 +874,49 @@ inline string getPropertySuffixFromPath(const string& ifaceName,
 
 /**
  * @brief Mapping table that decouples D-Bus metric naming from the Redfish
- *        Oem.Nvidia property names emitted on the CPU Port resource. Each
- *        entry holds:
+ *        Oem.Nvidia property URIs emitted on the CPU Port (or its
+ *        subordinate PortMetrics) resource. Each entry holds:
  *          metricLeafToken - substring identifying the metric in the D-Bus
  *                            Metric.Value object's leaf (filename).
  *          portLeafToken   - corresponding Port leaf substring; used to
- *                            derive the Port id from the metric leaf when
- *                            the Port id is not otherwise available.
- *          oemPropertyName - Redfish Oem.Nvidia property name on the Port.
+ *                            derive the Port id from the metric leaf.
+ *          propSuffix      - URI segment appended after `…/Ports/<portId>`,
+ *                            including any subordinate resource (e.g.
+ *                            `/Metrics`) and the JSON pointer fragment.
  */
 struct CpuPortOemMetricMapping
 {
     std::string_view metricLeafToken;
     std::string_view portLeafToken;
-    std::string_view oemPropertyName;
+    std::string_view propSuffix;
 };
 
 inline constexpr std::array<CpuPortOemMetricMapping, 6>
     cpuPortOemMetricMappings = {{
-        {"CLinkPacketCrcCount", "CLink", "PacketCRCErrors"},
-        {"CLinkPacketReplayCount", "CLink", "PacketReplayErrors"},
-        {"CLinkBandwidth", "CLink", "BandwidthBytes"},
-        {"NVLinkPacketCrcCount", "NVLink", "PacketCRCErrors"},
-        {"NVLinkPacketReplayCount", "NVLink", "PacketReplayErrors"},
-        {"NVLinkBandwidth", "NVLink", "BandwidthBytes"},
+        {"CLinkPacketCrcCount", "CLink",
+         "/Metrics#/Oem/Nvidia/PacketCRCErrors"},
+        {"CLinkPacketReplayCount", "CLink",
+         "/Metrics#/Oem/Nvidia/PacketReplayErrors"},
+        {"CLinkBandwidth", "CLink", "#/Oem/Nvidia/BandwidthBytes"},
+        {"NVLinkPacketCrcCount", "NVLink",
+         "/Metrics#/Oem/Nvidia/PacketCRCErrors"},
+        {"NVLinkPacketReplayCount", "NVLink",
+         "/Metrics#/Oem/Nvidia/PacketReplayErrors"},
+        {"NVLinkBandwidth", "NVLink", "#/Oem/Nvidia/BandwidthBytes"},
     }};
 
 /**
- * @brief derive the Port id and Oem.Nvidia property name from the static
- *        cpuPortOemMetricMappings table for CLink/NVLink Port
- *        telemetry
+ * @brief derive the Port id and the URI suffix to append after
+ *        `…/Ports/<portId>` from the static cpuPortOemMetricMappings table
+ *        for CLink/NVLink Port telemetry.
  *
  * @param[in]  devicePath   Full D-Bus path of the Metric.Value object.
  * @param[out] portId       Derived Redfish Port id segment.
- * @param[out] oemProperty  Derived Oem.Nvidia property name.
+ * @param[out] propSuffix   URI suffix to append after `…/Ports/<portId>`
  * @return true on a recognized CLink/NVLink Port metric.
  */
 inline bool getCpuPortMetricNames(const string& devicePath, string& portId,
-                                  string& oemProperty)
+                                  string& propSuffix)
 {
     sdbusplus::message::object_path objPath(devicePath);
     const string metricLeaf = objPath.filename();
@@ -930,7 +935,7 @@ inline bool getCpuPortMetricNames(const string& devicePath, string& portId,
         portId = metricLeaf;
         portId.replace(tokenPos, mapping.metricLeafToken.size(),
                        mapping.portLeafToken);
-        oemProperty = string(mapping.oemPropertyName);
+        propSuffix = string(mapping.propSuffix);
         return true;
     }
     return false;
@@ -981,15 +986,14 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         else if (ifaceName == "xyz.openbmc_project.Metric.Value")
         {
             string portId;
-            string oemProperty;
-            if (getCpuPortMetricNames(devicePath, portId, oemProperty))
+            if (getCpuPortMetricNames(devicePath, portId, propSuffix))
             {
                 metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
                 metricURI += "/Processors/";
                 metricURI += deviceName;
                 metricURI += "/Ports/";
                 metricURI += portId;
-                propSuffix = "#/Oem/Nvidia/" + oemProperty;
+                // propSuffix is already populated by getCpuPortMetricNames
             }
             else
             {
