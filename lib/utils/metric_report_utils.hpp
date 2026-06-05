@@ -897,12 +897,14 @@ inline constexpr std::array<CpuPortOemMetricMapping, 6>
          "/Metrics#/Oem/Nvidia/PacketCRCErrors"},
         {"CLinkPacketReplayCount", "CLink",
          "/Metrics#/Oem/Nvidia/PacketReplayErrors"},
-        {"CLinkBandwidth", "CLink", "#/Oem/Nvidia/BandwidthBytes"},
+        {"CLinkBandwidth", "CLink",
+         "/Metrics#/Oem/Nvidia/BandwidthBytesPerSecond"},
         {"NVLinkPacketCrcCount", "NVLink",
          "/Metrics#/Oem/Nvidia/PacketCRCErrors"},
         {"NVLinkPacketReplayCount", "NVLink",
          "/Metrics#/Oem/Nvidia/PacketReplayErrors"},
-        {"NVLinkBandwidth", "NVLink", "#/Oem/Nvidia/BandwidthBytes"},
+        {"NVLinkBandwidth", "NVLink",
+         "/Metrics#/Oem/Nvidia/BandwidthBytesPerSecond"},
     }};
 
 /**
