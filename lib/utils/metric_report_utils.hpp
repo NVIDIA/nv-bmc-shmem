@@ -920,7 +920,7 @@ inline constexpr std::array<CpuPortOemMetricMapping, 6>
 inline bool getCpuPortMetricNames(const string& devicePath, string& portId,
                                   string& propSuffix)
 {
-    sdbusplus::message::object_path objPath(devicePath);
+    sdbusplus::object_path objPath(devicePath);
     const string metricLeaf = objPath.filename();
     if (metricLeaf.empty())
     {
@@ -1118,7 +1118,7 @@ inline string generateURI(const string& deviceType, const string& deviceName,
             if (metricName == "PCIeType" || metricName == "MaxLanes" ||
                 metricName == "LanesInUse")
             {
-                sdbusplus::message::object_path deviceObjectPath(devicePath);
+                sdbusplus::object_path deviceObjectPath(devicePath);
                 const string childDeviceName = deviceObjectPath.filename();
                 string parentDeviceName = PLATFORMDEVICEPREFIX;
                 parentDeviceName += childDeviceName;
@@ -1173,8 +1173,7 @@ inline string generateURI(const string& deviceType, const string& deviceName,
                 if (devicePath.find("InbandReconfigPermissions") !=
                     std::string::npos)
                 {
-                    sdbusplus::message::object_path deviceObjectPath(
-                        devicePath);
+                    sdbusplus::object_path deviceObjectPath(devicePath);
                     const string childDeviceName = deviceObjectPath.filename();
                     metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
                     metricURI += "/Processors/";
@@ -1188,8 +1187,7 @@ inline string generateURI(const string& deviceType, const string& deviceName,
                 else if (devicePath.find("DOEReconfigPermissions") !=
                          std::string::npos)
                 {
-                    sdbusplus::message::object_path deviceObjectPath(
-                        devicePath);
+                    sdbusplus::object_path deviceObjectPath(devicePath);
                     const string childDeviceName = deviceObjectPath.filename();
                     metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
                     metricURI += "/Processors/";

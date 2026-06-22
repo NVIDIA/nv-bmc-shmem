@@ -155,7 +155,7 @@ class SHMSensorAggregator
      * @return MatchingNameSpaces
      */
     MatchingNameSpaces
-        parseDevicePath(const sdbusplus::message::object_path& devicePathObj);
+        parseDevicePath(const sdbusplus::object_path& devicePathObj);
 
     /**
      * @brief Method to handle new shared memory object insertion

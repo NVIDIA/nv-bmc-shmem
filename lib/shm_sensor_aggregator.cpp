@@ -61,7 +61,7 @@ size_t SHMSensorAggregator::getMatchCount(string objPathKeyword,
 }
 
 MatchingNameSpaces SHMSensorAggregator::parseDevicePath(
-    const sdbusplus::message::object_path& devicePathObj)
+    const sdbusplus::object_path& devicePathObj)
 {
     vector<tuple<SensorNameSpace, DeviceName, SubDeviceName, size_t>>
         matchingNameSpaces;
