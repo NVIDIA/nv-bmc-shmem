@@ -198,7 +198,8 @@ TEST(MetricReportUtilsTest, translateReading_PortStateLinkStatus_ReturnsOK)
     auto result = translateReading(
         "xyz.openbmc_project.Inventory.Decorator.PortState", "LinkStatus",
         "xyz.openbmc_project.Inventory.Decorator.PortState.LinkStatusType."
-        "LinkUp");
+        "LinkUp",
+        "CpuProcessorMetrics");
     EXPECT_EQ(result, "OK");
 }
 
@@ -534,7 +535,8 @@ TEST(MetricReportUtilsTest,
     auto result = translateReading(
         "xyz.openbmc_project.Inventory.Decorator.PortState", "LinkStatus",
         "xyz.openbmc_project.Inventory.Decorator.PortState.LinkStatusType."
-        "NoLink");
+        "NoLink",
+        "CpuProcessorMetrics");
     EXPECT_EQ(result, "Critical");
 }
 
@@ -544,7 +546,8 @@ TEST(MetricReportUtilsTest,
     auto result = translateReading(
         "xyz.openbmc_project.Inventory.Decorator.PortState", "LinkStatus",
         "xyz.openbmc_project.Inventory.Decorator.PortState.LinkStatusType."
-        "Starting");
+        "Starting",
+        "CpuProcessorMetrics");
     EXPECT_TRUE(result.empty());
 }
 
