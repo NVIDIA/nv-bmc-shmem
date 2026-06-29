@@ -742,7 +742,8 @@ inline pair<string, string> getProcessorAndCpuNum(string deviceName)
  * @return string
  */
 inline string translateReading(const string& ifaceName,
-                               const string& metricName, const string& reading)
+                               const string& metricName, const string& reading,
+                               const string& deviceType = "")
 {
     string metricValue;
     if (ifaceName == "xyz.openbmc_project.State.ProcessorPerformance")
@@ -768,18 +769,22 @@ inline string translateReading(const string& ifaceName,
         if (metricName == "LinkStatus")
         {
             metricValue = getLinkStatusType(reading);
-            // Nvlink Status.Health update
-            if (metricValue == "LinkDown" || metricValue == "LinkUp")
+            // Only CpuProcessorMetrics surfaces LinkStatus as Status/Health;
+            // port MetricReports need the literal PortLinkStatus string.
+            if (deviceType == "CpuProcessorMetrics")
             {
-                metricValue = "OK";
-            }
-            else if (metricValue == "NoLink")
-            {
-                metricValue = "Critical";
-            }
-            else
-            {
-                metricValue = "";
+                if (metricValue == "LinkDown" || metricValue == "LinkUp")
+                {
+                    metricValue = "OK";
+                }
+                else if (metricValue == "NoLink")
+                {
+                    metricValue = "Critical";
+                }
+                else
+                {
+                    metricValue = "";
+                }
             }
         }
         if (metricName == "LinkState")
@@ -1466,7 +1471,8 @@ inline pair<unordered_map<SHMKey, SHMValue>, bool>
         int i = 0;
         for (const string& reading : *readingArray)
         {
-            string val = translateReading(ifaceName, metricName, reading);
+            string val = translateReading(ifaceName, metricName, reading,
+                                          deviceType);
             string metricProp = generateURI(deviceType, deviceName,
                                             subDeviceName, devicePath,
                                             metricName, ifaceName);
@@ -1520,7 +1526,7 @@ inline pair<unordered_map<SHMKey, SHMValue>, bool>
         string val;
         if (const string* reading = get_if<string>(&value))
         {
-            val = translateReading(ifaceName, metricName, *reading);
+            val = translateReading(ifaceName, metricName, *reading, deviceType);
         }
         else if (const int* reading = get_if<int>(&value))
         {
