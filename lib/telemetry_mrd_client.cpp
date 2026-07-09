@@ -84,9 +84,11 @@ vector<SensorValue> getAllMRDValues(const string& mrdNamespace)
                 }
                 else
                 {
-                    string errorMessage = "SHMEMDEBUG: Requested" + nameSpace +
-                                          "namespace has no elements";
-                    LOG_ERROR(errorMessage);
+                    // Empty producer namespace is expected (nsmd has no BMC
+                    // PlatformEnvironmentMetrics); logged at debug, not error.
+                    SHMDEBUG(
+                        "SHMEMDEBUG: Requested {MRD} namespace has no elements",
+                        "MRD", nameSpace);
                 }
             }
             catch (const exception& e)

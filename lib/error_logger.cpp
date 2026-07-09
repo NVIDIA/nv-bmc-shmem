@@ -28,40 +28,42 @@ ErrorLogger& ErrorLogger::getInstance()
     return instance;
 }
 
-void ErrorLogger::logError(const std::string& errorMessage)
+bool ErrorLogger::logError(const std::string& errorMessage)
 {
-    // Get the current time
     auto currentTime = getCurrentTime();
 
     // Check if this error has been logged recently
     auto it = errorLogTimes.find(errorMessage);
     if (it != errorLogTimes.end())
     {
-        auto lastLogTime = it->second;
         auto timeSinceLastLog =
             std::chrono::duration_cast<std::chrono::seconds>(currentTime -
-                                                             lastLogTime)
+                                                             it->second)
                 .count();
 
         // If the error was logged less than LOG_INTERVAL_SECONDS ago, skip
         // logging
         if (timeSinceLastLog < LOG_INTERVAL_SECONDS)
         {
-            return;
+            return false;
         }
+
+        // Interval elapsed: refresh timestamp so the next window suppresses
+        // again (else it stays pinned at first-seen and every call re-logs).
+        it->second = currentTime;
     }
     else
     {
         if (errorLogTimes.size() >= MAX_LOG_ENTRIES)
         {
-            return;
+            return false;
         }
         // Add the new error message to the map with the current time
         errorLogTimes[errorMessage] = currentTime;
     }
 
-    // Log the error and update the last log time
     lg2::error("{ERROR_STRING}", "ERROR_STRING", errorMessage);
+    return true;
 }
 
 // Function to get the current time
