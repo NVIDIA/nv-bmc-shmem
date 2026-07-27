@@ -33,8 +33,9 @@ class ErrorLogger
      * message hasn't been logged within the last LOG_INTERVAL_SECONDS seconds.
      *
      * @param[in] errorMessage - The error message string to log
+     * @return true if the message was logged, false if it was suppressed
      */
-    void logError(const std::string& errorMessage);
+    bool logError(const std::string& errorMessage);
 
   private:
     ErrorLogger() = default;

@@ -24,48 +24,47 @@
 
 using namespace ::testing;
 
-// All tests use the singleton. State (errorLogTimes map) accumulates across
-// tests in the same process, so unique error strings are used in each test.
+// The ErrorLogger singleton accumulates suppression state across the whole test
+// process. Each test uses unique message strings and only asserts outcomes that
+// hold regardless of how full the map already is, so the tests stay independent
+// of execution order (e.g. under --gtest_shuffle) without a reset hook.
 
 TEST(ErrorLoggerTest, SingletonReturnsSameInstance)
 {
-    auto& a = ErrorLogger::getInstance();
-    auto& b = ErrorLogger::getInstance();
-    EXPECT_EQ(&a, &b);
+    EXPECT_EQ(&ErrorLogger::getInstance(), &ErrorLogger::getInstance());
 }
 
 TEST(ErrorLoggerTest, LogNewErrorDoesNotThrow)
 {
-    EXPECT_NO_THROW(
-        ErrorLogger::getInstance().logError("unique_first_error_abc123"));
+    EXPECT_NO_THROW(ErrorLogger::getInstance().logError("new_error_unique"));
 }
 
 TEST(ErrorLoggerTest, DuplicateWithinIntervalIsSuppressed)
 {
     auto& logger = ErrorLogger::getInstance();
-    logger.logError("dup_suppress_error_xyz");
-    // Immediately repeating the same error triggers the suppression branch
-    EXPECT_NO_THROW(logger.logError("dup_suppress_error_xyz"));
+    // A second occurrence of the same message within the interval is never
+    // re-emitted. This holds whether or not the first call was emitted, so it
+    // does not depend on the singleton's prior fill state.
+    logger.logError("dup_error_unique");
+    EXPECT_FALSE(logger.logError("dup_error_unique"));
 }
 
 TEST(ErrorLoggerTest, DifferentErrorsTrackedSeparately)
 {
     auto& logger = ErrorLogger::getInstance();
-    EXPECT_NO_THROW(logger.logError("distinct_alpha_error_1"));
-    EXPECT_NO_THROW(logger.logError("distinct_beta_error_2"));
+    EXPECT_NO_THROW(logger.logError("alpha_error_unique"));
+    EXPECT_NO_THROW(logger.logError("beta_error_unique"));
 }
 
-// Fill the singleton map to MAX_LOG_ENTRIES to exercise the capacity-limit
-// branch. Entries from earlier tests in this process are already in the map,
-// so the limit is reached before the loop completes — the tail calls hit the
-// ">= MAX_LOG_ENTRIES" early-return path which is what we need for coverage.
 TEST(ErrorLoggerTest, MaxEntriesLimitDropsNewErrors)
 {
     auto& logger = ErrorLogger::getInstance();
+    // Inserting MAX_LOG_ENTRIES unique messages fills the map to capacity
+    // regardless of what earlier tests inserted.
     for (int i = 0; i < MAX_LOG_ENTRIES; i++)
     {
         logger.logError("max_fill_entry_" + std::to_string(i));
     }
-    // Once the map is at capacity, new unique errors are silently dropped
-    EXPECT_NO_THROW(logger.logError("overflow_unique_error_sentinel_99999"));
+    // At capacity a brand-new message is dropped, not emitted.
+    EXPECT_FALSE(logger.logError("overflow_sentinel_unique"));
 }
