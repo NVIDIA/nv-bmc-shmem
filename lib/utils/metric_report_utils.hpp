@@ -220,6 +220,17 @@ static unordered_map<string, string> presenceStateMap = {
     {"com.nvidia.MemorySpareChannel.Presence.NotPresent", "false"},
     {"com.nvidia.MemorySpareChannel.Presence.Unavailable", "null"}};
 
+/* Map for MemoryRowRemapping tri-state enums to redfish string. Unknown (no
+ * reading) maps to null. */
+static unordered_map<string, string> rowRemappingStateMap = {
+    {"com.nvidia.MemoryRowRemapping.RowRemappingFailureStates.True", "true"},
+    {"com.nvidia.MemoryRowRemapping.RowRemappingFailureStates.False", "false"},
+    {"com.nvidia.MemoryRowRemapping.RowRemappingFailureStates.Unknown", "null"},
+    {"com.nvidia.MemoryRowRemapping.RowRemappingPendingStates.True", "true"},
+    {"com.nvidia.MemoryRowRemapping.RowRemappingPendingStates.False", "false"},
+    {"com.nvidia.MemoryRowRemapping.RowRemappingPendingStates.Unknown",
+     "null"}};
+
 /* Map for portInfo interface pdi to redfish string based on metric name */
 static MetricNameMap portInfoInterfaceMap = {
     {"CurrentSpeed", "#/CurrentSpeedGbps"}, {"MaxSpeed", "#/MaxSpeedGbps"}};
@@ -709,6 +720,23 @@ inline string toPresenceType(const string& presence)
 }
 
 /**
+ * @brief Translate a MemoryRowRemapping tri-state enum to the redfish string
+ * (true/false/null); unrecognised values yield an empty string.
+ *
+ * @param[in] state - D-Bus enum FQN string
+ * @return string
+ */
+inline string toRowRemappingState(const string& state)
+{
+    if (rowRemappingStateMap.find(state) != rowRemappingStateMap.end())
+    {
+        return rowRemappingStateMap[state];
+    }
+    // Unrecognised value; True/False/Unknown are already mapped above.
+    return "";
+}
+
+/**
  * @brief Method to get the Processor and cpu number for the device name.
  *
  * @param[in] deviceName
@@ -834,6 +862,18 @@ inline string translateReading(const string& ifaceName,
         if (metricName == "MemorySpareChannelPresence")
         {
             metricValue = toPresenceType(reading);
+        }
+    }
+    else if (ifaceName == "com.nvidia.MemoryRowRemapping")
+    {
+        if (metricName == "RowRemappingFailureState" ||
+            metricName == "RowRemappingPendingState")
+        {
+            metricValue = toRowRemappingState(reading);
+        }
+        else
+        {
+            metricValue = reading;
         }
     }
     else

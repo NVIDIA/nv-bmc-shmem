@@ -529,6 +529,65 @@ TEST(MetricReportUtilsTest,
     EXPECT_EQ(result, "true");
 }
 
+// =========================================================================
+// toRowRemappingState
+// =========================================================================
+
+TEST(MetricReportUtilsTest, toRowRemappingState_True_ReturnsTrue)
+{
+    EXPECT_EQ(
+        toRowRemappingState(
+            "com.nvidia.MemoryRowRemapping.RowRemappingFailureStates.True"),
+        "true");
+}
+
+TEST(MetricReportUtilsTest, toRowRemappingState_False_ReturnsFalse)
+{
+    EXPECT_EQ(
+        toRowRemappingState(
+            "com.nvidia.MemoryRowRemapping.RowRemappingPendingStates.False"),
+        "false");
+}
+
+TEST(MetricReportUtilsTest, toRowRemappingState_Unknown_ReturnsNull)
+{
+    EXPECT_EQ(
+        toRowRemappingState(
+            "com.nvidia.MemoryRowRemapping.RowRemappingFailureStates.Unknown"),
+        "null");
+}
+
+TEST(MetricReportUtilsTest, toRowRemappingState_Unrecognised_ReturnsEmpty)
+{
+    EXPECT_TRUE(toRowRemappingState("xyz.unknown.State").empty());
+}
+
+TEST(MetricReportUtilsTest,
+     translateReading_MemoryRowRemapping_FailureState_ReturnsTrue)
+{
+    auto result = translateReading(
+        "com.nvidia.MemoryRowRemapping", "RowRemappingFailureState",
+        "com.nvidia.MemoryRowRemapping.RowRemappingFailureStates.True");
+    EXPECT_EQ(result, "true");
+}
+
+TEST(MetricReportUtilsTest,
+     translateReading_MemoryRowRemapping_PendingState_Unknown_ReturnsNull)
+{
+    auto result = translateReading(
+        "com.nvidia.MemoryRowRemapping", "RowRemappingPendingState",
+        "com.nvidia.MemoryRowRemapping.RowRemappingPendingStates.Unknown");
+    EXPECT_EQ(result, "null");
+}
+
+TEST(MetricReportUtilsTest,
+     translateReading_MemoryRowRemapping_Count_ReturnsPassthrough)
+{
+    auto result = translateReading("com.nvidia.MemoryRowRemapping",
+                                   "ceRowRemappingCount", "42");
+    EXPECT_EQ(result, "42");
+}
+
 TEST(MetricReportUtilsTest,
      translateReading_PortState_LinkStatus_NoLink_ReturnsCritical)
 {
