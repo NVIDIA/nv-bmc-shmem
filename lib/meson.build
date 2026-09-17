@@ -24,6 +24,7 @@ conf_data.set_quoted(
 )
 conf_data.set('LOG_INTERVAL_SECONDS', get_option('log_interval_seconds'))
 conf_data.set('MAX_LOG_ENTRIES', get_option('max_log_entries'))
+conf_data.set10('LPU_TELEMETRY', get_option('accelerator-telemetry').enabled())
 if get_option('enable-shm-debug').enabled()
     add_project_arguments('-DENABLE_SHM_DEBUG', language: 'cpp')
 endif
@@ -68,4 +69,3 @@ nv_shmem_dep = declare_dependency(
     sources: nv_shmem_gen,
     dependencies: nv_shmem_deps,
 )
-

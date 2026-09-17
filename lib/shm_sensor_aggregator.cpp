@@ -507,6 +507,9 @@ bool SHMSensorAggregator::updateSHMObject(const string& devicePath,
         auto [nameSpace, deviceName, subDeviceName,
               arraySize] = nameSpaceMap[sensorKey];
 
+        string shmNamespace = producerName + "_" + PLATFORMDEVICEPREFIX +
+                              nameSpace + "_0";
+
         const uint64_t systemTimestamp =
             static_cast<uint64_t>(
                 chrono::duration_cast<chrono::milliseconds>(
@@ -522,8 +525,6 @@ bool SHMSensorAggregator::updateSHMObject(const string& devicePath,
             nv::sensor_aggregation::metricUtils::getDateTimeUintMs(
                 systemTimestamp);
 
-        string shmNamespace = producerName + "_" + PLATFORMDEVICEPREFIX +
-                              nameSpace + "_0";
         if (arraySize == 0)
         {
             auto metricVal = getMetricValue(propName, interface, value);

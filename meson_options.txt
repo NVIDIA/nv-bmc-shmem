@@ -20,6 +20,12 @@ option(
     description: 'Enable this flag for additional debug traces. This flag should be used only for debug purpose and it will impact performance.',
 )
 option(
+    'accelerator-telemetry',
+    type: 'feature',
+    value: 'disabled',
+    description: 'Enable NVIDIA accelerator-specific Redfish metric URI mappings.',
+)
+option(
     'log_interval_seconds',
     type: 'integer',
     value: 2700,

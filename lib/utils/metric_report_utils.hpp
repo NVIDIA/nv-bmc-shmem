@@ -26,8 +26,10 @@
 #include <boost/algorithm/string.hpp>
 
 #include <cctype>
+#include <charconv>
 #include <regex>
 #include <string>
+#include <system_error>
 #include <unordered_map>
 
 using namespace std;
@@ -238,6 +240,11 @@ static MetricNameMap portInfoInterfaceMap = {
 /* Map for portState interface pdi to redfish string based on metric name */
 static MetricNameMap portStateInterfaceMap = {{"LinkStatus", "#/LinkStatus"},
                                               {"LinkState", "#/Status/State"}};
+
+#if LPU_TELEMETRY
+static MetricNameMap processorPortMetricsPortStateMap = {
+    {"LinkState", "#/LinkState"}};
+#endif
 
 /* Map for IBPort interface pdi to redfish string based on metric name */
 static MetricNameMap ibPortInterfaceMap = {
@@ -551,6 +558,65 @@ static MetricNameMap reConfigPermission = {
 /* Map for PowerCap to redfish string based on metric name*/
 static MetricNameMap powerCapMap = {{"PowerCap", "/PowerLimitWatts/SetPoint"}};
 
+#if LPU_TELEMETRY
+/* Accelerator telemetry has platform-specific D-Bus interfaces. Keep these
+ * mappings behind the LP30 build option so generic processor URI rules remain
+ * unchanged for other platforms. */
+static MetricNameMap lpuProcessorMetricsMap = {
+    {"State", "#/Status/State"},
+    {"PowerState", "#/PowerState"},
+    {"VoltageBinNumber", "#/Oem/Nvidia/VoltageBinNumber"},
+    {"Ticks", "/ProcessorMetrics#/Oem/Nvidia/Ticks"},
+    {"AVSNominalVminMillivolts",
+     "#/Oem/Nvidia/AVSNominalVminMillivolts"},
+    {"AVSUnderdriveVminMillivolts",
+     "#/Oem/Nvidia/AVSUnderdriveVminMillivolts"},
+    {"AVSOverdriveVminMillivolts",
+     "#/Oem/Nvidia/AVSOverdriveVminMillivolts"},
+    {"BootStatusCode", "#/Oem/Nvidia/BootStatusCode"},
+    {"SpiCrcErrorCount", "/ProcessorMetrics#/Oem/Nvidia/SpiCrcErrorCount"},
+    {"SpiCorrectedCrcErrorCount",
+     "/ProcessorMetrics#/Oem/Nvidia/SpiCorrectedCrcErrorCount"},
+    {"RiscVClockSpeedMHz", "/ProcessorMetrics#/Oem/Nvidia/RiscVClockSpeedMHz"},
+    {"CoreClockSpeedMHz", "/ProcessorMetrics#/Oem/Nvidia/CoreClockSpeedMHz"},
+    {"C2CNEClockSpeedMHz", "/ProcessorMetrics#/Oem/Nvidia/C2CNEClockSpeedMHz"},
+    {"C2CSEClockSpeedMHz", "/ProcessorMetrics#/Oem/Nvidia/C2CSEClockSpeedMHz"},
+    {"C2CSWClockSpeedMHz", "/ProcessorMetrics#/Oem/Nvidia/C2CSWClockSpeedMHz"},
+    {"C2CNWClockSpeedMHz", "/ProcessorMetrics#/Oem/Nvidia/C2CNWClockSpeedMHz"},
+    {"ActivityMonitorState",
+     "/ProcessorMetrics#/Oem/Nvidia/ActivityMonitorState"},
+    {"FpC2cTotalSBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpC2c/CorrectableECCErrorCount"},
+    {"FpC2cTotalMBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpC2c/UncorrectableECCErrorCount"},
+    {"FpIcuTileMisc0TotalSBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpIcuTileMisc0/CorrectableECCErrorCount"},
+    {"FpIcuTileMisc0TotalMBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpIcuTileMisc0/UncorrectableECCErrorCount"},
+    {"FpIcuTileVxmTotalSBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpIcuTileVxm/CorrectableECCErrorCount"},
+    {"FpIcuTileVxmTotalMBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpIcuTileVxm/UncorrectableECCErrorCount"},
+    {"FpNimTileTotalSBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpNimTile/CorrectableECCErrorCount"},
+    {"FpNimTileTotalMBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpNimTile/UncorrectableECCErrorCount"},
+    {"FpSxmTileTotalSBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpSxmTile/CorrectableECCErrorCount"},
+    {"FpSxmTileTotalMBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpSxmTile/UncorrectableECCErrorCount"},
+    {"FpVxmTileTotalSBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpVxmTile/CorrectableECCErrorCount"},
+    {"FpVxmTileTotalMBE",
+     "/ProcessorMetrics#/Oem/Nvidia/SecdedMetrics/FpVxmTile/UncorrectableECCErrorCount"},
+};
+
+static MetricNameMap lpuPortMetricsMap = {
+    {"FecErrorsPerLane", "/Metrics#/Oem/Nvidia/FecErrorsPerLane"},
+    {"LinkLockedPerLane", "/Metrics#/Oem/Nvidia/LinkLockedPerLane"},
+};
+#endif
+
 /* This map is for PDI name to metric name. Key is pdi name and value is
  * corresponding metric name map */
 static PDINameMap pdiNameMap = {
@@ -601,7 +667,12 @@ static PDINameMap pdiNameMap = {
     {"com.nvidia.PowerSmoothing.CurrentPowerProfile",
      powerSmoothingCurrentPwrProfileInterfaceMap},
     {"com.nvidia.InbandReconfigSettings", reConfigPermission},
-    {"xyz.openbmc_project.Control.Power.Cap", powerCapMap}};
+    {"xyz.openbmc_project.Control.Power.Cap", powerCapMap},
+#if LPU_TELEMETRY
+    {"com.nvidia.LPUProcessorMetrics", lpuProcessorMetricsMap},
+    {"com.nvidia.LPUPortMetrics", lpuPortMetricsMap},
+#endif
+};
 
 /**
  * @brief This method will form suffix for redfish URI for device/sub device
@@ -987,6 +1058,37 @@ inline bool getCpuPortMetricNames(const string& devicePath, string& portId,
     }
     return false;
 }
+
+#if LPU_TELEMETRY
+inline string getLpuPlatformEnvironmentChassisId(const string& sensorName)
+{
+    static const regex lpuSensorRegex("^HGX_LPU_([0-9]+)_");
+    static const regex lpuModuleRegex("^(HGX_LPU_Module_[0-9]+)_");
+    static const regex smaRegex("^(HGX_(FPGA|LPU)_SMA_[CM]_[0-9]+)_");
+    smatch match;
+
+    if (regex_search(sensorName, match, lpuSensorRegex))
+    {
+        const string lpuIdString = match[1].str();
+        unsigned long lpuId = 0;
+        const char* begin = lpuIdString.data();
+        const char* end = begin + lpuIdString.size();
+        const auto [ptr, ec] = from_chars(begin, end, lpuId);
+        if (ec != errc{} || ptr != end)
+        {
+            return "HGX_Chassis_0";
+        }
+        return "HGX_LPU_Module_" + to_string(lpuId / 2);
+    }
+    if (regex_search(sensorName, match, lpuModuleRegex) ||
+        regex_search(sensorName, match, smaRegex))
+    {
+        return match[1].str();
+    }
+    return "HGX_Chassis_0";
+}
+#endif
+
 /**
  * @brief Method to generate metric property uri from namespace, devicename and
  * other properties.
@@ -1009,11 +1111,15 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     if (deviceType == "PlatformEnvironmentMetrics")
     {
         metricURI = "/redfish/v1/Chassis/";
+#if LPU_TELEMETRY
+        metricURI += getLpuPlatformEnvironmentChassisId(subDeviceName);
+#else
         if (deviceName.find(PLATFORMDEVICEPREFIX) != 0)
         {
             metricURI += PLATFORMDEVICEPREFIX;
         }
         metricURI += deviceName;
+#endif
         metricURI += "/Sensors/";
         metricURI += subDeviceName;
     }
@@ -1101,7 +1207,17 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         metricURI += deviceName;
         metricURI += "/Ports/";
         metricURI += subDeviceName;
-        propSuffix = getPropertySuffix(ifaceName, metricName);
+#if LPU_TELEMETRY
+        if (ifaceName == "xyz.openbmc_project.Inventory.Decorator.PortState" &&
+            metricName == "LinkState")
+        {
+            propSuffix = processorPortMetricsPortStateMap[metricName];
+        }
+        else
+#endif
+        {
+            propSuffix = getPropertySuffix(ifaceName, metricName);
+        }
     }
     else if (deviceType == "ProcessorPortGPMMetrics")
     {
@@ -1146,6 +1262,18 @@ inline string generateURI(const string& deviceType, const string& deviceName,
         metricURI = "/redfish/v1/Systems/" PLATFORMSYSTEMID;
         metricURI += "/Processors/";
         metricURI += deviceName;
+#if LPU_TELEMETRY
+        if (ifaceName == "com.nvidia.LPUProcessorMetrics")
+        {
+            propSuffix = getPropertySuffix(ifaceName, metricName);
+            if (propSuffix.empty())
+            {
+                return {};
+            }
+            metricURI += propSuffix;
+            return metricURI;
+        }
+#endif
         metricURI += "/ProcessorMetrics#";
         if (ifaceName == "xyz.openbmc_project.Memory.MemoryECC")
         {
@@ -1550,6 +1678,43 @@ inline pair<unordered_map<SHMKey, SHMValue>, bool>
             i++;
         }
     }
+#if LPU_TELEMETRY
+    else if (const vector<uint8_t>* readingArray =
+                 get_if<vector<uint8_t>>(&value))
+    {
+        isList = true;
+        int i = 0;
+        for (uint8_t reading : *readingArray)
+        {
+            string metricProp = generateURI(deviceType, deviceName,
+                                            subDeviceName, devicePath,
+                                            metricName, ifaceName);
+            if (metricProp.empty())
+            {
+                string errorMessage =
+                    "SHMEMDEBUG: Metric Property Empty for deviceType " +
+                    deviceType + " deviceName " + deviceName +
+                    " subDeviceName " + subDeviceName + " devicePath " +
+                    devicePath + " metricName " + metricName + " ifaceName " +
+                    ifaceName;
+                LOG_ERROR(errorMessage);
+                return {shmValues, isList};
+            }
+            metricProp += "/";
+            metricProp += to_string(i);
+            string sensorKey = devicePath + "/" + ifaceName + "." + metricName +
+                               "/" + to_string(i);
+            const bool isLpuLinkLock = deviceType == "ProcessorPortMetrics" &&
+                                       metricName == "LinkLockedPerLane";
+            const string metricValue = isLpuLinkLock
+                                           ? (reading == 0 ? "false" : "true")
+                                           : to_string(reading);
+            SHMValue shmValue = {metricProp, metricValue};
+            shmValues.emplace(sensorKey, shmValue);
+            i++;
+        }
+    }
+#endif
     else
     {
         const string metricProp = generateURI(deviceType, deviceName,
@@ -1586,6 +1751,12 @@ inline pair<unordered_map<SHMKey, SHMValue>, bool>
         {
             val = to_string(*reading);
         }
+#if LPU_TELEMETRY
+        else if (const uint8_t* reading = get_if<uint8_t>(&value))
+        {
+            val = to_string(*reading);
+        }
+#endif
         else if (const uint32_t* reading = get_if<uint32_t>(&value))
         {
             val = to_string(*reading);
@@ -1667,6 +1838,12 @@ inline SHMValue getMetricValue(const string& metricName,
     {
         val = to_string(*reading);
     }
+#if LPU_TELEMETRY
+    else if (const uint8_t* reading = get_if<uint8_t>(&value))
+    {
+        val = to_string(*reading);
+    }
+#endif
     else if (const uint32_t* reading = get_if<uint32_t>(&value))
     {
         val = to_string(*reading);
