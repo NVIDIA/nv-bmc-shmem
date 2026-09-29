@@ -1394,16 +1394,13 @@ inline string generateURI(const string& deviceType, const string& deviceName,
     }
     else
     {
-        // NOTE: the next condition is tautologically true for any two
-        // distinct string constants, so the body never executes. This is
-        // documented as intentional dead code in
-        // test/BRANCH_COVERAGE_NOTES.md and is left as-is to preserve the
-        // historical control-flow shape; Coverity DEADCODE on this branch
-        // is therefore expected.
-        // coverity[dead_error_line]
+        // This condition is always false ((A != X) || (A != Y) is true for
+        // any two distinct X, Y), so the body never runs. Left as-is to
+        // avoid a behaviour change; see test/BRANCH_COVERAGE_NOTES.md.
         if (!((deviceType != "PlatformEnvironmentMetrics") ||
               (deviceType != "CpuProcessorMetrics")))
         {
+            // coverity[dead_error_line]
             metricURI.clear();
         }
     }

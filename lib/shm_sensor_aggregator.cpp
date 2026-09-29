@@ -296,34 +296,26 @@ bool SHMSensorAggregator::updateNanValue(
     string timeStampStr =
         nv::sensor_aggregation::metricUtils::getDateTimeUintMs(systemTimestamp);
     auto sensorKey = getSensorMapKey(devicePath, interface, propName);
-    // Read nameSpaceMap under nameSpaceMapLock; writers at insertShmemObject
-    // and handleArrayUpdates hold the same lock, so an unprotected read here
-    // races with concurrent inserts or arraySize updates.
-    // Value-initialize so arraySize (POD scalar) is zeroed on the
-    // !inNameSpaceMap branch where we never assign from the map.
-    NameSpaceFields fields{};
-    bool inNameSpaceMap;
-    {
-        scoped_lock lock(nameSpaceMapLock);
-        auto it = nameSpaceMap.find(sensorKey);
-        inNameSpaceMap = (it != nameSpaceMap.end());
-        if (inNameSpaceMap)
-        {
-            fields = it->second;
-        }
-    }
-    // notApplicableKeys is mutated by writers under notApplicableKeysLock, so
-    // this read must take the same lock to avoid the same race class fixed
-    // above for nameSpaceMap.
-    bool inNotApplicableKeys;
+    // Read notApplicableKeys and nameSpaceMap under the same locks their
+    // writers hold.
+    bool inNotApplicableKeys = false;
     {
         scoped_lock lock(notApplicableKeysLock);
         inNotApplicableKeys =
             (notApplicableKeys.find(sensorKey) != notApplicableKeys.end());
     }
-    if (!inNameSpaceMap && !inNotApplicableKeys)
+    NameSpaceFields fields{};
     {
-        return status;
+        scoped_lock lock(nameSpaceMapLock);
+        if (nameSpaceMap.find(sensorKey) == nameSpaceMap.end() &&
+            !inNotApplicableKeys)
+        {
+            return status;
+        }
+        // operator[] is intentional: for a key that is only in
+        // notApplicableKeys it default-inserts an entry, which is the
+        // pre-existing behaviour.
+        fields = nameSpaceMap[sensorKey];
     }
     const auto& [nameSpace, deviceName, subDeviceName, arraySize] = fields;
     string shmNamespace = producerName + "_" + PLATFORMDEVICEPREFIX +
@@ -528,7 +520,7 @@ bool SHMSensorAggregator::updateSHMObject(const string& devicePath,
     // Value-initialize so arraySize (POD scalar) is zeroed on the
     // !inNameSpaceMap branch where we never assign from the map.
     NameSpaceFields fields{};
-    bool inNameSpaceMap;
+    bool inNameSpaceMap = false;
     {
         scoped_lock lock(nameSpaceMapLock);
         auto it = nameSpaceMap.find(sensorKey);
@@ -589,7 +581,7 @@ bool SHMSensorAggregator::updateSHMObject(const string& devicePath,
     }
     // Read notApplicableKeys under notApplicableKeysLock; writers hold it, so
     // an unprotected find here races with concurrent inserts.
-    bool inNotApplicableKeys;
+    bool inNotApplicableKeys = false;
     {
         scoped_lock lock(notApplicableKeysLock);
         inNotApplicableKeys =

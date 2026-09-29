@@ -17,6 +17,8 @@
 
 #include "impl/shmem_map.hpp"
 
+#include <phosphor-logging/lg2.hpp>
+
 using namespace std;
 using namespace nv::shmem;
 
@@ -84,18 +86,26 @@ vector<SensorValue> Map<SensorMap, SensorValue>::getAllValues()
 template <>
 Map<SensorMap, SensorValue>::~Map()
 {
+    if (!(opts & O_CREAT))
+    {
+        return;
+    }
+    // Destructors must not throw; log the failure instead of terminating.
     try
     {
-        if (opts & O_CREAT)
-        {
-            memory->destroy<SensorMap>(string(nameSpace + "map").c_str());
-        }
+        memory->destroy<SensorMap>(string(nameSpace + "map").c_str());
+    }
+    catch (const exception& e)
+    {
+        lg2::error("SHMEMDEBUG: Failed to destroy map for {NAMESPACE} "
+                   "namespace: {EXCEPTION}",
+                   "NAMESPACE", nameSpace, "EXCEPTION", e.what());
     }
     catch (...)
     {
-        // Destructors must not propagate exceptions. The string ctor and
-        // boost::interprocess::destroy can throw under low-memory or shm
-        // corruption; swallow here so stack unwinding completes safely.
+        lg2::error("SHMEMDEBUG: Failed to destroy map for {NAMESPACE} "
+                   "namespace: unknown exception",
+                   "NAMESPACE", nameSpace);
     }
 }
 
